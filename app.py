@@ -1,15 +1,16 @@
 import logging
 import os
 import re
-import uuid
 import time  # Import for tracking execution time
+import uuid
+from datetime import datetime
 
 from flask import Flask, request, jsonify
 from flask_cors import CORS, cross_origin
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import inspect
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy import text
+from sqlalchemy.dialects.postgresql import UUID
 
 logging.basicConfig(level=logging.INFO)
 flask_cors_logger = logging.getLogger('flask_cors')
@@ -36,10 +37,12 @@ class Prognostic(db.Model):
     user_id = db.Column(UUID(as_uuid=True), primary_key=True, unique=True, nullable=False, default=uuid.uuid4)
     user_email = db.Column(db.String, unique=True, nullable=False)
     text = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)  # Auto-generated on insert
+    booking_button_name = db.Column(db.Text, nullable=True)  # Can be NULL
+    booking_button_redirection = db.Column(db.Text, nullable=True)  # Can be NULL
 
 
 def create_table_and_index_if_not_exists():
-    print("ok")
     with app.app_context():
         inspector = inspect(db.engine)
 
@@ -50,12 +53,60 @@ def create_table_and_index_if_not_exists():
         else:
             logger.info("Table 'prognostic' already exists.")
 
-        # Check if index on 'user_email' exists and create it if necessary
-        index_check_query = text("""
-            SELECT indexname FROM pg_indexes WHERE tablename = 'prognostic' AND indexname = 'idx_user_email';
-        """)
-
         with db.engine.connect() as connection:
+            # Check for 'created_at' column and add it if necessary
+            created_at_exists = connection.execute(text("""
+                SELECT 1 FROM information_schema.columns 
+                WHERE table_name = 'prognostic' AND column_name = 'created_at';
+            """)).fetchone()
+
+            if not created_at_exists:
+                connection.execute(text("""
+                    ALTER TABLE prognostic 
+                    ADD COLUMN created_at TIMESTAMP DEFAULT NOW();
+                """))
+                logger.info("'created_at' column added.")
+                connection.commit()
+            else:
+                logger.info("'created_at' column already exists.")
+
+            # Check for 'booking_button_name' column and add it if necessary
+            booking_button_name_exists = connection.execute(text("""
+                SELECT 1 FROM information_schema.columns 
+                WHERE table_name = 'prognostic' AND column_name = 'booking_button_name';
+            """)).fetchone()
+
+            if not booking_button_name_exists:
+                connection.execute(text("""
+                    ALTER TABLE prognostic 
+                    ADD COLUMN booking_button_name TEXT;
+                """))
+                connection.commit()
+                logger.info("'booking_button_name' column added.")
+            else:
+                logger.info("'booking_button_name' column already exists.")
+
+            # Check for 'booking_button_redirection' column and add it if necessary
+            booking_button_redirection_exists = connection.execute(text("""
+                SELECT 1 FROM information_schema.columns 
+                WHERE table_name = 'prognostic' AND column_name = 'booking_button_redirection';
+            """)).fetchone()
+
+            if not booking_button_redirection_exists:
+                connection.execute(text("""
+                    ALTER TABLE prognostic 
+                    ADD COLUMN booking_button_redirection TEXT;
+                """))
+                connection.commit()
+                logger.info("'booking_button_redirection' column added.")
+            else:
+                logger.info("'booking_button_redirection' column already exists.")
+
+            # Check if index on 'user_email' exists and create it if necessary
+            index_check_query = text("""
+                SELECT indexname FROM pg_indexes WHERE tablename = 'prognostic' AND indexname = 'idx_user_email';
+            """)
+
             index_exists = connection.execute(index_check_query).fetchone()
 
             if not index_exists:
@@ -70,7 +121,6 @@ def create_table_and_index_if_not_exists():
                     logger.error(f"Failed to create index: {e}")
             else:
                 logger.info("Index 'idx_user_email' already exists.")
-
 
 
 # Call the function to create the table and index if not present
@@ -107,6 +157,8 @@ def insert_user():
     data = request.json
     user_email = data.get('user_email')
     text_content = data.get('text')
+    booking_button_name = data.get('booking_button_name')
+    booking_button_redirection = data.get('booking_button_redirection')
 
     if not user_email:
         return jsonify({'error': 'user_email is required'}), 400
@@ -119,12 +171,16 @@ def insert_user():
         existing_user = Prognostic.query.filter_by(user_email=user_email).first()
         if existing_user:
             existing_user.text = transformed_text
+            existing_user.booking_button_name = booking_button_name
+            existing_user.booking_button_redirection = booking_button_redirection
             db.session.commit()
             elapsed_time = time.time() - start_time  # Calculate execution time
             logger.info(f"Insert user operation took {elapsed_time:.4f} seconds.")
             return jsonify({'message': 'User updated successfully!', 'user_id': str(existing_user.user_id)}), 200
         else:
-            new_user = Prognostic(user_id=user_uuid, user_email=user_email, text=transformed_text)
+            new_user = Prognostic(user_id=user_uuid, user_email=user_email, text=transformed_text,
+                                  booking_button_name=booking_button_name,
+                                  booking_button_redirection=booking_button_redirection)
             db.session.add(new_user)
             db.session.commit()
             elapsed_time = time.time() - start_time  # Calculate execution time
@@ -152,6 +208,8 @@ def get_user():
                 "success": True,
                 "text": user.text,
                 "user_email": user.user_email,
+                "booking_button_name": user.booking_button_name,
+                "booking_button_redirection": user.booking_button_redirection,
                 "length": len(user.text)
             }
             elapsed_time = time.time() - start_time  # Calculate execution time
