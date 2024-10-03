@@ -22,6 +22,7 @@ packaging==24.1
 pg8000==1.31.2
 psycopg2==2.9.9
 python-dateutil==2.9.0.post0
+python-json-logger==2.0.7
 requests==2.32.3
 scramp==1.4.5
 six==1.16.0

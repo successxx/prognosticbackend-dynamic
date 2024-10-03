@@ -1,21 +1,27 @@
+import json
 import logging
 import os
 import re
 import time  # Import for tracking execution time
+import urllib
 import uuid
 from datetime import datetime
-
 from flask import Flask, request, jsonify
 from flask_cors import CORS, cross_origin
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import inspect
 from sqlalchemy import text
 from sqlalchemy.dialects.postgresql import UUID
+from pythonjsonlogger import jsonlogger  # JSON formatter for logs
 
-logging.basicConfig(level=logging.INFO)
-flask_cors_logger = logging.getLogger('flask_cors')
-flask_cors_logger.setLevel(logging.INFO)
+# Set up logging with JSON formatter
+logHandler = logging.StreamHandler()
+formatter = jsonlogger.JsonFormatter('%(asctime)s %(name)s %(levelname)s %(message)s')
+
+logHandler.setFormatter(formatter)
 logger = logging.getLogger(__name__)
+logger.addHandler(logHandler)
+logger.setLevel(logging.INFO)
 
 app = Flask(__name__)
 cors = CORS(app)
@@ -135,19 +141,33 @@ def markdown_to_html(text):
     return text
 
 
+# Custom log function with additional attributes
+def log_custom_message(message, extra_data):
+    logger.info(message, extra=extra_data)
+
+
 @app.before_request
 def log_request():
-    logger.info(f"Incoming request: {request.method} {request.url} - Body: {request.get_data()}")
+    # Log request with additional attributes
+    extra_data = {
+        "method": request.method,
+        "url": request.url,
+        "remote_addr": request.remote_addr,
+        "request_id": str(uuid.uuid4())
+    }
+    log_custom_message("Incoming request", extra_data)
 
 
 @app.after_request
 def log_response(response):
-    logger.info(f"Outgoing response: Status {response.status_code} - Body: {response.get_data(as_text=True)}")
+    # Log response with additional attributes
+    extra_data = {
+        "status_code": response.status_code,
+        "url": request.url,
+        "response_length": len(response.get_data(as_text=True)),
+    }
+    log_custom_message("Outgoing response", extra_data)
     return response
-
-
-import uuid
-import urllib.parse
 
 
 @cross_origin()
@@ -175,7 +195,11 @@ def insert_user():
             existing_user.booking_button_redirection = booking_button_redirection
             db.session.commit()
             elapsed_time = time.time() - start_time  # Calculate execution time
-            logger.info(f"Insert user operation took {elapsed_time:.4f} seconds.")
+            extra_data = {
+                'user_email': user_email,
+                'elapsed_time': f"{elapsed_time:.4f} seconds",
+            }
+            log_custom_message("User updated successfully", extra_data)
             return jsonify({'message': 'User updated successfully!', 'user_id': str(existing_user.user_id)}), 200
         else:
             new_user = Prognostic(user_id=user_uuid, user_email=user_email, text=transformed_text,
@@ -184,7 +208,11 @@ def insert_user():
             db.session.add(new_user)
             db.session.commit()
             elapsed_time = time.time() - start_time  # Calculate execution time
-            logger.info(f"Insert user operation took {elapsed_time:.4f} seconds.")
+            extra_data = {
+                'user_email': user_email,
+                'elapsed_time': f"{elapsed_time:.4f} seconds",
+            }
+            log_custom_message("User added successfully", extra_data)
             return jsonify({'message': 'User added successfully!', 'user_id': str(new_user.user_id)}), 201
     except Exception as e:
         db.session.rollback()
@@ -213,11 +241,15 @@ def get_user():
                 "length": len(user.text)
             }
             elapsed_time = time.time() - start_time  # Calculate execution time
-            logger.info(f"Get user operation took {elapsed_time:.4f} seconds.")
+            extra_data = {
+                'user_email': user_email,
+                'elapsed_time': f"{elapsed_time:.4f} seconds",
+            }
+            log_custom_message("Get user operation", extra_data)
             return jsonify(response_data), 200
         else:
             elapsed_time = time.time() - start_time  # Calculate execution time
-            logger.info(f"Get user operation took {elapsed_time:.4f} seconds.")
+            log_custom_message("User not found", {"user_email": user_email, "elapsed_time": f"{elapsed_time:.4f} seconds"})
             return jsonify({"success": False, "message": "User not found"}), 404
     except Exception as e:
         logger.error(f"Error while fetching user: {e}")
