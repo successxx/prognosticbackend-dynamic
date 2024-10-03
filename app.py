@@ -165,16 +165,14 @@ def insert_user():
     if not user_email:
         response = jsonify({'error': 'user_email is required'})
         response.status_code = 400
-        # Log the request and response
+        # Log the request and response (without text content)
         extra_data = {
             "event_time": time.time(),  # Custom event time
             "method": request.method,
             "url": request.url,
             "remote_addr": request.remote_addr,
             "headers": dict(request.headers),
-            "request_body": data,
             "response_status": response.status_code,
-            "response_body": response.get_json(),
             "elapsed_time": f"{time.time() - start_time:.4f} seconds",
         }
         log_custom_message("Insert user failed", extra_data)
@@ -194,20 +192,27 @@ def insert_user():
             elapsed_time = time.time() - start_time  # Calculate execution time
             response = jsonify({'message': 'User updated successfully!', 'user_id': str(existing_user.user_id)})
             response.status_code = 200
-            # Log the request and response
+
+            # Log the request and response (without the text)
             extra_data = {
-                "event_time": time.time(),  # Custom event time
+                "event_time": time.time(),
                 "method": request.method,
                 "url": request.url,
                 "remote_addr": request.remote_addr,
                 "headers": dict(request.headers),
-                "request_body": data,
+                "request_body": {
+                    "user_email": user_email,
+                    "booking_button_name": booking_button_name,
+                    "booking_button_redirection": booking_button_redirection,
+                },
                 "response_status": response.status_code,
-                "response_body": response.get_json(),
-                "user_email": user_email,
                 "elapsed_time": f"{elapsed_time:.4f} seconds",
             }
             log_custom_message("User updated successfully", extra_data)
+
+            # Log the text content separately
+            logger.info(f"Text content for {user_email}: {transformed_text}")
+
             return response
         else:
             new_user = Prognostic(
@@ -222,40 +227,49 @@ def insert_user():
             elapsed_time = time.time() - start_time  # Calculate execution time
             response = jsonify({'message': 'User added successfully!', 'user_id': str(new_user.user_id)})
             response.status_code = 201
-            # Log the request and response
+
+            # Log the request and response (without the text)
             extra_data = {
-                "event_time": time.time(),  # Custom event time
+                "event_time": time.time(),
                 "method": request.method,
                 "url": request.url,
                 "remote_addr": request.remote_addr,
                 "headers": dict(request.headers),
-                "request_body": data,
+                "request_body": {
+                    "user_email": user_email,
+                    "booking_button_name": booking_button_name,
+                    "booking_button_redirection": booking_button_redirection,
+                },
                 "response_status": response.status_code,
-                "response_body": response.get_json(),
-                "user_email": user_email,
                 "elapsed_time": f"{elapsed_time:.4f} seconds",
             }
             log_custom_message("User added successfully", extra_data)
+
+            # Log the text content separately
+            logger.info(f"Text content for {user_email}: {transformed_text}")
+
             return response
     except Exception as e:
         db.session.rollback()
         response = jsonify({'error': str(e)})
         response.status_code = 400
-        # Log the request and response
+
+        # Log the error
         extra_data = {
-            "event_time": time.time(),  # Custom event time
+            "event_time": time.time(),
             "method": request.method,
             "url": request.url,
             "remote_addr": request.remote_addr,
             "headers": dict(request.headers),
-            "request_body": data,
+            "request_body": {
+                "user_email": user_email
+            },
             "response_status": response.status_code,
-            "response_body": response.get_json(),
-            "user_email": user_email,
             "error": str(e),
             "elapsed_time": f"{time.time() - start_time:.4f} seconds",
         }
         log_custom_message("Error while inserting user", extra_data)
+
         return response
 
 
@@ -264,19 +278,19 @@ def get_user():
     start_time = time.time()  # Start tracking time
     data = request.get_json()
     user_email = data.get('user_email')
+
     if not user_email:
         response = jsonify({"error": "Email parameter is required"})
         response.status_code = 400
-        # Log the request and response
+        # Log the request and response (without user text content)
         extra_data = {
-            "event_time": time.time(),  # Custom event time
+            "event_time": time.time(),
             "method": request.method,
             "url": request.url,
             "remote_addr": request.remote_addr,
             "headers": dict(request.headers),
             "request_body": data,
             "response_status": response.status_code,
-            "response_body": response.get_json(),
             "elapsed_time": f"{time.time() - start_time:.4f} seconds",
         }
         log_custom_message("Get user failed", extra_data)
@@ -288,7 +302,6 @@ def get_user():
         if user:
             response_data = {
                 "success": True,
-                "text": user.text,
                 "user_email": user.user_email,
                 "booking_button_name": user.booking_button_name,
                 "booking_button_redirection": user.booking_button_redirection,
@@ -297,9 +310,10 @@ def get_user():
             elapsed_time = time.time() - start_time  # Calculate execution time
             response = jsonify(response_data)
             response.status_code = 200
-            # Log the request and response
+
+            # Log the request and response (without user text content)
             extra_data = {
-                "event_time": time.time(),  # Custom event time
+                "event_time": time.time(),
                 "method": request.method,
                 "url": request.url,
                 "remote_addr": request.remote_addr,
@@ -311,14 +325,19 @@ def get_user():
                 "elapsed_time": f"{elapsed_time:.4f} seconds",
             }
             log_custom_message("Get user operation", extra_data)
+
+            # Log the text content separately
+            logger.info(f"Text content for {user_email}: {user.text}")
+
             return response
         else:
             elapsed_time = time.time() - start_time  # Calculate execution time
             response = jsonify({"success": False, "message": "User not found"})
             response.status_code = 404
-            # Log the request and response
+
+            # Log the request and response (without user text content)
             extra_data = {
-                "event_time": time.time(),  # Custom event time
+                "event_time": time.time(),
                 "method": request.method,
                 "url": request.url,
                 "remote_addr": request.remote_addr,
@@ -334,9 +353,10 @@ def get_user():
     except Exception as e:
         response = jsonify({"error": str(e)})
         response.status_code = 400
-        # Log the request and response
+
+        # Log the error
         extra_data = {
-            "event_time": time.time(),  # Custom event time
+            "event_time": time.time(),
             "method": request.method,
             "url": request.url,
             "remote_addr": request.remote_addr,
@@ -350,6 +370,7 @@ def get_user():
         }
         log_custom_message("Error while fetching user", extra_data)
         return response
+
 
 
 if __name__ == '__main__':
