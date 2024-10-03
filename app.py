@@ -211,7 +211,7 @@ def insert_user():
             log_custom_message("User updated successfully", extra_data)
 
             # Log the text content separately
-            logger.info(f"Text content for {user_email}: {transformed_text}")
+            # logger.info(f"Text content for {user_email}: {transformed_text}")
 
             return response
         else:
@@ -246,7 +246,7 @@ def insert_user():
             log_custom_message("User added successfully", extra_data)
 
             # Log the text content separately
-            logger.info(f"Text content for {user_email}: {transformed_text}")
+            # logger.info(f"Text content for {user_email}: {transformed_text}")
 
             return response
     except Exception as e:
@@ -302,6 +302,7 @@ def get_user():
         if user:
             response_data = {
                 "success": True,
+                "text": user.text,
                 "user_email": user.user_email,
                 "booking_button_name": user.booking_button_name,
                 "booking_button_redirection": user.booking_button_redirection,
@@ -327,7 +328,7 @@ def get_user():
             log_custom_message("Get user operation", extra_data)
 
             # Log the text content separately
-            logger.info(f"Text content for {user_email}: {user.text}")
+            # logger.info(f"Text content for {user_email}: {user.text}")
 
             return response
         else:
