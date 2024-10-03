@@ -1,4 +1,3 @@
-import json
 import logging
 import os
 import re
@@ -6,13 +5,14 @@ import time  # Import for tracking execution time
 import urllib
 import uuid
 from datetime import datetime
+
 from flask import Flask, request, jsonify
 from flask_cors import CORS, cross_origin
 from flask_sqlalchemy import SQLAlchemy
+from pythonjsonlogger import jsonlogger  # JSON formatter for logs
 from sqlalchemy import inspect
 from sqlalchemy import text
 from sqlalchemy.dialects.postgresql import UUID
-from pythonjsonlogger import jsonlogger  # JSON formatter for logs
 
 # Set up logging with JSON formatter
 logHandler = logging.StreamHandler()
@@ -204,6 +204,7 @@ def insert_user():
                     "user_email": user_email,
                     "booking_button_name": booking_button_name,
                     "booking_button_redirection": booking_button_redirection,
+                    "text": "Not produced, its too big",
                 },
                 "response_status": response.status_code,
                 "elapsed_time": f"{elapsed_time:.4f} seconds",
@@ -239,6 +240,7 @@ def insert_user():
                     "user_email": user_email,
                     "booking_button_name": booking_button_name,
                     "booking_button_redirection": booking_button_redirection,
+                    "text": "Not produced, its too big"
                 },
                 "response_status": response.status_code,
                 "elapsed_time": f"{elapsed_time:.4f} seconds",
@@ -319,9 +321,15 @@ def get_user():
                 "url": request.url,
                 "remote_addr": request.remote_addr,
                 "headers": dict(request.headers),
-                "request_body": data,
                 "response_status": response.status_code,
-                "response_body": response_data,
+                "response_body": {
+                    "success": True,
+                    "user_email": user.user_email,
+                    "text": "Not produced, its too big",
+                    "booking_button_name": user.booking_button_name,
+                    "booking_button_redirection": user.booking_button_redirection,
+                    "length": len(user.text)  # Log only the length of the text, not the text itself
+                },
                 "user_email": user_email,
                 "elapsed_time": f"{elapsed_time:.4f} seconds",
             }
@@ -371,7 +379,6 @@ def get_user():
         }
         log_custom_message("Error while fetching user", extra_data)
         return response
-
 
 
 if __name__ == '__main__':
