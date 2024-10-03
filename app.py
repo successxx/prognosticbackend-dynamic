@@ -29,6 +29,7 @@ werkzeug_logger.setLevel(logging.ERROR)  # Suppress INFO logs from Werkzeug
 
 app = Flask(__name__)
 cors = CORS(app)
+dyno = os.getenv('DYNO', 'unknown-dyno')
 
 database_url = os.environ.get('DATABASE_URL')
 if database_url:
@@ -147,6 +148,7 @@ def markdown_to_html(text):
 
 # Custom log function with additional attributes
 def log_custom_message(message, extra_data):
+    extra_data['dyno'] = dyno
     logger.info(message, extra=extra_data)
 
 
