@@ -23,6 +23,10 @@ logger = logging.getLogger(__name__)
 logger.addHandler(logHandler)
 logger.setLevel(logging.INFO)
 
+# Suppress Flask's default logging
+werkzeug_logger = logging.getLogger('werkzeug')
+werkzeug_logger.setLevel(logging.ERROR)  # Suppress INFO logs from Werkzeug
+
 app = Flask(__name__)
 cors = CORS(app)
 
@@ -146,30 +150,6 @@ def log_custom_message(message, extra_data):
     logger.info(message, extra=extra_data)
 
 
-@app.before_request
-def log_request():
-    # Log request with additional attributes
-    extra_data = {
-        "method": request.method,
-        "url": request.url,
-        "remote_addr": request.remote_addr,
-        "request_id": str(uuid.uuid4())
-    }
-    log_custom_message("Incoming request", extra_data)
-
-
-@app.after_request
-def log_response(response):
-    # Log response with additional attributes
-    extra_data = {
-        "status_code": response.status_code,
-        "url": request.url,
-        "response_length": len(response.get_data(as_text=True)),
-    }
-    log_custom_message("Outgoing response", extra_data)
-    return response
-
-
 @cross_origin()
 @app.route('/insert_user', methods=['POST'])
 def insert_user():
@@ -181,7 +161,22 @@ def insert_user():
     booking_button_redirection = data.get('booking_button_redirection')
 
     if not user_email:
-        return jsonify({'error': 'user_email is required'}), 400
+        response = jsonify({'error': 'user_email is required'})
+        response.status_code = 400
+        # Log the request and response
+        extra_data = {
+            "event_time": time.time(),  # Custom event time
+            "method": request.method,
+            "url": request.url,
+            "remote_addr": request.remote_addr,
+            "headers": dict(request.headers),
+            "request_body": data,
+            "response_status": response.status_code,
+            "response_body": response.get_json(),
+            "elapsed_time": f"{time.time() - start_time:.4f} seconds",
+        }
+        log_custom_message("Insert user failed", extra_data)
+        return response
 
     decoded_text = urllib.parse.unquote(text_content)
     user_uuid = uuid.uuid4()
@@ -195,29 +190,71 @@ def insert_user():
             existing_user.booking_button_redirection = booking_button_redirection
             db.session.commit()
             elapsed_time = time.time() - start_time  # Calculate execution time
+            response = jsonify({'message': 'User updated successfully!', 'user_id': str(existing_user.user_id)})
+            response.status_code = 200
+            # Log the request and response
             extra_data = {
-                'user_email': user_email,
-                'elapsed_time': f"{elapsed_time:.4f} seconds",
+                "event_time": time.time(),  # Custom event time
+                "method": request.method,
+                "url": request.url,
+                "remote_addr": request.remote_addr,
+                "headers": dict(request.headers),
+                "request_body": data,
+                "response_status": response.status_code,
+                "response_body": response.get_json(),
+                "user_email": user_email,
+                "elapsed_time": f"{elapsed_time:.4f} seconds",
             }
             log_custom_message("User updated successfully", extra_data)
-            return jsonify({'message': 'User updated successfully!', 'user_id': str(existing_user.user_id)}), 200
+            return response
         else:
-            new_user = Prognostic(user_id=user_uuid, user_email=user_email, text=transformed_text,
-                                  booking_button_name=booking_button_name,
-                                  booking_button_redirection=booking_button_redirection)
+            new_user = Prognostic(
+                user_id=user_uuid,
+                user_email=user_email,
+                text=transformed_text,
+                booking_button_name=booking_button_name,
+                booking_button_redirection=booking_button_redirection
+            )
             db.session.add(new_user)
             db.session.commit()
             elapsed_time = time.time() - start_time  # Calculate execution time
+            response = jsonify({'message': 'User added successfully!', 'user_id': str(new_user.user_id)})
+            response.status_code = 201
+            # Log the request and response
             extra_data = {
-                'user_email': user_email,
-                'elapsed_time': f"{elapsed_time:.4f} seconds",
+                "event_time": time.time(),  # Custom event time
+                "method": request.method,
+                "url": request.url,
+                "remote_addr": request.remote_addr,
+                "headers": dict(request.headers),
+                "request_body": data,
+                "response_status": response.status_code,
+                "response_body": response.get_json(),
+                "user_email": user_email,
+                "elapsed_time": f"{elapsed_time:.4f} seconds",
             }
             log_custom_message("User added successfully", extra_data)
-            return jsonify({'message': 'User added successfully!', 'user_id': str(new_user.user_id)}), 201
+            return response
     except Exception as e:
         db.session.rollback()
-        logger.error(f"Error while inserting user: {e}")
-        return jsonify({'error': str(e)}), 400
+        response = jsonify({'error': str(e)})
+        response.status_code = 400
+        # Log the request and response
+        extra_data = {
+            "event_time": time.time(),  # Custom event time
+            "method": request.method,
+            "url": request.url,
+            "remote_addr": request.remote_addr,
+            "headers": dict(request.headers),
+            "request_body": data,
+            "response_status": response.status_code,
+            "response_body": response.get_json(),
+            "user_email": user_email,
+            "error": str(e),
+            "elapsed_time": f"{time.time() - start_time:.4f} seconds",
+        }
+        log_custom_message("Error while inserting user", extra_data)
+        return response
 
 
 @app.route('/get_user', methods=['POST'])
@@ -226,7 +263,22 @@ def get_user():
     data = request.get_json()
     user_email = data.get('user_email')
     if not user_email:
-        return jsonify({"error": "Email parameter is required"}), 400
+        response = jsonify({"error": "Email parameter is required"})
+        response.status_code = 400
+        # Log the request and response
+        extra_data = {
+            "event_time": time.time(),  # Custom event time
+            "method": request.method,
+            "url": request.url,
+            "remote_addr": request.remote_addr,
+            "headers": dict(request.headers),
+            "request_body": data,
+            "response_status": response.status_code,
+            "response_body": response.get_json(),
+            "elapsed_time": f"{time.time() - start_time:.4f} seconds",
+        }
+        log_custom_message("Get user failed", extra_data)
+        return response
 
     try:
         user = Prognostic.query.filter_by(user_email=user_email).first()
@@ -241,20 +293,62 @@ def get_user():
                 "length": len(user.text)
             }
             elapsed_time = time.time() - start_time  # Calculate execution time
+            response = jsonify(response_data)
+            response.status_code = 200
+            # Log the request and response
             extra_data = {
-                'user_email': user_email,
-                'elapsed_time': f"{elapsed_time:.4f} seconds",
+                "event_time": time.time(),  # Custom event time
+                "method": request.method,
+                "url": request.url,
+                "remote_addr": request.remote_addr,
+                "headers": dict(request.headers),
+                "request_body": data,
+                "response_status": response.status_code,
+                "response_body": response_data,
+                "user_email": user_email,
+                "elapsed_time": f"{elapsed_time:.4f} seconds",
             }
             log_custom_message("Get user operation", extra_data)
-            return jsonify(response_data), 200
+            return response
         else:
             elapsed_time = time.time() - start_time  # Calculate execution time
-            log_custom_message("User not found", {"user_email": user_email, "elapsed_time": f"{elapsed_time:.4f} seconds"})
-            return jsonify({"success": False, "message": "User not found"}), 404
+            response = jsonify({"success": False, "message": "User not found"})
+            response.status_code = 404
+            # Log the request and response
+            extra_data = {
+                "event_time": time.time(),  # Custom event time
+                "method": request.method,
+                "url": request.url,
+                "remote_addr": request.remote_addr,
+                "headers": dict(request.headers),
+                "request_body": data,
+                "response_status": response.status_code,
+                "response_body": response.get_json(),
+                "user_email": user_email,
+                "elapsed_time": f"{elapsed_time:.4f} seconds",
+            }
+            log_custom_message("User not found", extra_data)
+            return response
     except Exception as e:
-        logger.error(f"Error while fetching user: {e}")
-        return jsonify({"error": str(e)}), 400
+        response = jsonify({"error": str(e)})
+        response.status_code = 400
+        # Log the request and response
+        extra_data = {
+            "event_time": time.time(),  # Custom event time
+            "method": request.method,
+            "url": request.url,
+            "remote_addr": request.remote_addr,
+            "headers": dict(request.headers),
+            "request_body": data,
+            "response_status": response.status_code,
+            "response_body": response.get_json(),
+            "user_email": user_email,
+            "error": str(e),
+            "elapsed_time": f"{time.time() - start_time:.4f} seconds",
+        }
+        log_custom_message("Error while fetching user", extra_data)
+        return response
 
 
 if __name__ == '__main__':
-    app.run(host='127.0.0.1', port=5001, debug=True)
+    app.run(host='127.0.0.1', port=5001)
