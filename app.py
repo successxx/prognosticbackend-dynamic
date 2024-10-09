@@ -53,6 +53,17 @@ class Prognostic(db.Model):
     booking_button_redirection = db.Column(db.Text, nullable=True)  # Can be NULL
 
 
+# New model class for the second table
+class PrognosticPsych(db.Model):
+    __tablename__ = 'prognostic_psych'
+    user_id = db.Column(UUID(as_uuid=True), primary_key=True, unique=True, nullable=False, default=uuid.uuid4)
+    user_email = db.Column(db.String, unique=True, nullable=False)
+    text = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)  # Auto-generated on insert
+    booking_button_name = db.Column(db.Text, nullable=True)  # Can be NULL
+    booking_button_redirection = db.Column(db.Text, nullable=True)  # Can be NULL
+
+
 def create_table_and_index_if_not_exists():
     with app.app_context():
         inspector = inspect(db.engine)
@@ -64,78 +75,90 @@ def create_table_and_index_if_not_exists():
         else:
             logger.info("Table 'prognostic' already exists.")
 
+        # Existing code for 'prognostic' table remains unchanged
+        # [Your existing code for adding columns and indexes]
+
+        # Now check and create 'prognostic_psych' table
+        if 'prognostic_psych' not in inspector.get_table_names():
+            # Create only the PrognosticPsych table
+            PrognosticPsych.__table__.create(db.engine)
+            logger.info("Table 'prognostic_psych' created.")
+        else:
+            logger.info("Table 'prognostic_psych' already exists.")
+
         with db.engine.connect() as connection:
-            # Check for 'created_at' column and add it if necessary
+            # Check for 'created_at' column in 'prognostic_psych' table and add it if necessary
             created_at_exists = connection.execute(text("""
                 SELECT 1 FROM information_schema.columns 
-                WHERE table_name = 'prognostic' AND column_name = 'created_at';
+                WHERE table_name = 'prognostic_psych' AND column_name = 'created_at';
             """)).fetchone()
 
             if not created_at_exists:
                 connection.execute(text("""
-                    ALTER TABLE prognostic 
+                    ALTER TABLE prognostic_psych 
                     ADD COLUMN created_at TIMESTAMP DEFAULT NOW();
                 """))
-                logger.info("'created_at' column added.")
+                logger.info("'created_at' column added to 'prognostic_psych'.")
                 connection.commit()
             else:
-                logger.info("'created_at' column already exists.")
+                logger.info("'created_at' column already exists in 'prognostic_psych'.")
 
-            # Check for 'booking_button_name' column and add it if necessary
+            # Check for 'booking_button_name' column in 'prognostic_psych' table and add it if necessary
             booking_button_name_exists = connection.execute(text("""
                 SELECT 1 FROM information_schema.columns 
-                WHERE table_name = 'prognostic' AND column_name = 'booking_button_name';
+                WHERE table_name = 'prognostic_psych' AND column_name = 'booking_button_name';
             """)).fetchone()
 
             if not booking_button_name_exists:
                 connection.execute(text("""
-                    ALTER TABLE prognostic 
+                    ALTER TABLE prognostic_psych 
                     ADD COLUMN booking_button_name TEXT;
                 """))
                 connection.commit()
-                logger.info("'booking_button_name' column added.")
+                logger.info("'booking_button_name' column added to 'prognostic_psych'.")
             else:
-                logger.info("'booking_button_name' column already exists.")
+                logger.info("'booking_button_name' column already exists in 'prognostic_psych'.")
 
-            # Check for 'booking_button_redirection' column and add it if necessary
+            # Check for 'booking_button_redirection' column in 'prognostic_psych' table and add it if necessary
             booking_button_redirection_exists = connection.execute(text("""
                 SELECT 1 FROM information_schema.columns 
-                WHERE table_name = 'prognostic' AND column_name = 'booking_button_redirection';
+                WHERE table_name = 'prognostic_psych' AND column_name = 'booking_button_redirection';
             """)).fetchone()
 
             if not booking_button_redirection_exists:
                 connection.execute(text("""
-                    ALTER TABLE prognostic 
+                    ALTER TABLE prognostic_psych 
                     ADD COLUMN booking_button_redirection TEXT;
                 """))
                 connection.commit()
-                logger.info("'booking_button_redirection' column added.")
+                logger.info("'booking_button_redirection' column added to 'prognostic_psych'.")
             else:
-                logger.info("'booking_button_redirection' column already exists.")
+                logger.info("'booking_button_redirection' column already exists in 'prognostic_psych'.")
 
-            # Check if index on 'user_email' exists and create it if necessary
+            # Check if index on 'user_email' exists in 'prognostic_psych' table and create it if necessary
             index_check_query = text("""
-                SELECT indexname FROM pg_indexes WHERE tablename = 'prognostic' AND indexname = 'idx_user_email';
+                SELECT indexname FROM pg_indexes WHERE tablename = 'prognostic_psych' AND indexname = 'idx_user_email_psych';
             """)
 
             index_exists = connection.execute(index_check_query).fetchone()
 
             if not index_exists:
                 create_index_query = text("""
-                    CREATE INDEX idx_user_email ON prognostic (user_email);
+                    CREATE INDEX idx_user_email_psych ON prognostic_psych (user_email);
                 """)
                 try:
                     connection.execute(create_index_query)
                     connection.commit()  # Explicitly commit the transaction
-                    logger.info("Index 'idx_user_email' created.")
+                    logger.info("Index 'idx_user_email_psych' created.")
                 except Exception as e:
-                    logger.error(f"Failed to create index: {e}")
+                    logger.error(f"Failed to create index on 'prognostic_psych': {e}")
             else:
-                logger.info("Index 'idx_user_email' already exists.")
+                logger.info("Index 'idx_user_email_psych' already exists.")
 
 
-# Call the function to create the table and index if not present
+# Call the function to create the tables and indexes if not present
 create_table_and_index_if_not_exists()
+
 
 
 def markdown_to_html(text):
@@ -378,6 +401,237 @@ def get_user():
             "elapsed_time": f"{time.time() - start_time:.4f} seconds",
         }
         log_custom_message("Error while fetching user", extra_data)
+        return response
+
+
+# New endpoint for inserting/updating users in the 'prognostic_psych' table
+@cross_origin()
+@app.route('/insert_user_psych', methods=['POST'])
+def insert_user_psych():
+    start_time = time.time()  # Start tracking time
+    data = request.json
+    user_email = data.get('user_email')
+    text_content = data.get('text')
+    booking_button_name = data.get('booking_button_name')
+    booking_button_redirection = data.get('booking_button_redirection')
+
+    if not user_email:
+        response = jsonify({'error': 'user_email is required'})
+        response.status_code = 400
+        # Log the request and response (without text content)
+        extra_data = {
+            "event_time": time.time(),  # Custom event time
+            "method": request.method,
+            "url": request.url,
+            "remote_addr": request.remote_addr,
+            "headers": dict(request.headers),
+            "response_status": response.status_code,
+            "elapsed_time": f"{time.time() - start_time:.4f} seconds",
+        }
+        log_custom_message("Insert user psych failed", extra_data)
+        return response
+
+    decoded_text = urllib.parse.unquote(text_content)
+    user_uuid = uuid.uuid4()
+    transformed_text = markdown_to_html(decoded_text)
+
+    try:
+        existing_user = PrognosticPsych.query.filter_by(user_email=user_email).first()
+        if existing_user:
+            existing_user.text = transformed_text
+            existing_user.booking_button_name = booking_button_name
+            existing_user.booking_button_redirection = booking_button_redirection
+            db.session.commit()
+            elapsed_time = time.time() - start_time  # Calculate execution time
+            response = jsonify({'message': 'User psych updated successfully!', 'user_id': str(existing_user.user_id)})
+            response.status_code = 200
+
+            # Log the request and response (without the text)
+            extra_data = {
+                "event_time": time.time(),
+                "method": request.method,
+                "url": request.url,
+                "remote_addr": request.remote_addr,
+                "headers": dict(request.headers),
+                "request_body": {
+                    "user_email": user_email,
+                    "booking_button_name": booking_button_name,
+                    "booking_button_redirection": booking_button_redirection,
+                    "text": "Not produced, its too big",
+                },
+                "response_status": response.status_code,
+                "elapsed_time": f"{elapsed_time:.4f} seconds",
+            }
+            log_custom_message("User psych updated successfully", extra_data)
+
+            # Log the text content separately if needed
+            # logger.info(f"Text content for {user_email}: {transformed_text}")
+
+            return response
+        else:
+            new_user = PrognosticPsych(
+                user_id=user_uuid,
+                user_email=user_email,
+                text=transformed_text,
+                booking_button_name=booking_button_name,
+                booking_button_redirection=booking_button_redirection
+            )
+            db.session.add(new_user)
+            db.session.commit()
+            elapsed_time = time.time() - start_time  # Calculate execution time
+            response = jsonify({'message': 'User psych added successfully!', 'user_id': str(new_user.user_id)})
+            response.status_code = 201
+
+            # Log the request and response (without the text)
+            extra_data = {
+                "event_time": time.time(),
+                "method": request.method,
+                "url": request.url,
+                "remote_addr": request.remote_addr,
+                "headers": dict(request.headers),
+                "request_body": {
+                    "user_email": user_email,
+                    "booking_button_name": booking_button_name,
+                    "booking_button_redirection": booking_button_redirection,
+                    "text": "Not produced, its too big"
+                },
+                "response_status": response.status_code,
+                "elapsed_time": f"{elapsed_time:.4f} seconds",
+            }
+            log_custom_message("User psych added successfully", extra_data)
+
+            # Log the text content separately if needed
+            # logger.info(f"Text content for {user_email}: {transformed_text}")
+
+            return response
+    except Exception as e:
+        db.session.rollback()
+        response = jsonify({'error': str(e)})
+        response.status_code = 400
+
+        # Log the error
+        extra_data = {
+            "event_time": time.time(),
+            "method": request.method,
+            "url": request.url,
+            "remote_addr": request.remote_addr,
+            "headers": dict(request.headers),
+            "request_body": {
+                "user_email": user_email
+            },
+            "response_status": response.status_code,
+            "error": str(e),
+            "elapsed_time": f"{time.time() - start_time:.4f} seconds",
+        }
+        log_custom_message("Error while inserting user psych", extra_data)
+
+        return response
+
+
+# New endpoint for retrieving users from the 'prognostic_psych' table
+@app.route('/get_user_psych', methods=['POST'])
+def get_user_psych():
+    start_time = time.time()  # Start tracking time
+    data = request.get_json()
+    user_email = data.get('user_email')
+
+    if not user_email:
+        response = jsonify({"error": "Email parameter is required"})
+        response.status_code = 400
+        # Log the request and response (without user text content)
+        extra_data = {
+            "event_time": time.time(),
+            "method": request.method,
+            "url": request.url,
+            "remote_addr": request.remote_addr,
+            "headers": dict(request.headers),
+            "request_body": data,
+            "response_status": response.status_code,
+            "elapsed_time": f"{time.time() - start_time:.4f} seconds",
+        }
+        log_custom_message("Get user psych failed", extra_data)
+        return response
+
+    try:
+        user = PrognosticPsych.query.filter_by(user_email=user_email).first()
+
+        if user:
+            response_data = {
+                "success": True,
+                "text": user.text,
+                "user_email": user.user_email,
+                "booking_button_name": user.booking_button_name,
+                "booking_button_redirection": user.booking_button_redirection,
+                "length": len(user.text)
+            }
+            elapsed_time = time.time() - start_time  # Calculate execution time
+            response = jsonify(response_data)
+            response.status_code = 200
+
+            # Log the request and response (without user text content)
+            extra_data = {
+                "event_time": time.time(),
+                "method": request.method,
+                "url": request.url,
+                "remote_addr": request.remote_addr,
+                "headers": dict(request.headers),
+                "response_status": response.status_code,
+                "response_body": {
+                    "success": True,
+                    "user_email": user.user_email,
+                    "text": "Not produced, its too big",
+                    "booking_button_name": user.booking_button_name,
+                    "booking_button_redirection": user.booking_button_redirection,
+                    "length": len(user.text)  # Log only the length of the text, not the text itself
+                },
+                "user_email": user_email,
+                "elapsed_time": f"{elapsed_time:.4f} seconds",
+            }
+            log_custom_message("Get user psych operation", extra_data)
+
+            # Log the text content separately if needed
+            # logger.info(f"Text content for {user_email}: {user.text}")
+
+            return response
+        else:
+            elapsed_time = time.time() - start_time  # Calculate execution time
+            response = jsonify({"success": False, "message": "User not found"})
+            response.status_code = 404
+
+            # Log the request and response (without user text content)
+            extra_data = {
+                "event_time": time.time(),
+                "method": request.method,
+                "url": request.url,
+                "remote_addr": request.remote_addr,
+                "headers": dict(request.headers),
+                "request_body": data,
+                "response_status": response.status_code,
+                "response_body": response.get_json(),
+                "user_email": user_email,
+                "elapsed_time": f"{elapsed_time:.4f} seconds",
+            }
+            log_custom_message("User psych not found", extra_data)
+            return response
+    except Exception as e:
+        response = jsonify({"error": str(e)})
+        response.status_code = 400
+
+        # Log the error
+        extra_data = {
+            "event_time": time.time(),
+            "method": request.method,
+            "url": request.url,
+            "remote_addr": request.remote_addr,
+            "headers": dict(request.headers),
+            "request_body": data,
+            "response_status": response.status_code,
+            "response_body": response.get_json(),
+            "user_email": user_email,
+            "error": str(e),
+            "elapsed_time": f"{time.time() - start_time:.4f} seconds",
+        }
+        log_custom_message("Error while fetching user psych", extra_data)
         return response
 
 
