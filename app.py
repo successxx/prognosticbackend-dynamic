@@ -160,7 +160,6 @@ def create_table_and_index_if_not_exists():
 create_table_and_index_if_not_exists()
 
 
-
 def markdown_to_html(text):
     text = re.sub(r'\*\*(.*?)\*\*', r'<strong>\1</strong>', text)
     text = re.sub(r'### (.*)', r'<h3 class="text-xl font-bold mb-2">\1</h3>', text)
@@ -633,6 +632,46 @@ def get_user_psych():
         }
         log_custom_message("Error while fetching user psych", extra_data)
         return response
+
+
+@app.route('/user/email/<user_email>/psych', methods=['DELETE'])
+def delete_user_data_psych(user_email):
+    try:
+        user_data = PrognosticPsych.query.filter_by(user_email=user_email).first()
+
+        # If user data exists, delete the record - done to make sure that when generation is done for same user
+        # user will not see previous results
+        if user_data:
+            db.session.delete(user_data)
+            db.session.commit()
+            return jsonify({"message": f"User data for {user_email} deleted successfully."}), 200
+        else:
+            # If no user is found, return 404
+            return jsonify({"error": "User not found."}), 404
+
+    except Exception as e:
+        # Handle any errors that may occur
+        return jsonify({"error": str(e)}), 500
+
+
+@app.route('/user/email/<user_email>', methods=['DELETE'])
+def delete_user_data(user_email):
+    try:
+        user_data = Prognostic.query.filter_by(user_email=user_email).first()
+
+        # If user data exists, delete the record - done to make sure that when generation is done for same user
+        # user will not see previous results
+        if user_data:
+            db.session.delete(user_data)
+            db.session.commit()
+            return jsonify({"message": f"User data for {user_email} deleted successfully."}), 200
+        else:
+            # If no user is found, return 404
+            return jsonify({"error": "User not found."}), 404
+
+    except Exception as e:
+        # Handle any errors that may occur
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == '__main__':
