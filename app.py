@@ -667,7 +667,8 @@ def delete_user_data(user_email):
             return jsonify({"message": f"User data for {user_email} deleted successfully."}), 200
         else:
             # If no user is found, return 404
-            return jsonify({"error": "User not found."}), 404
+            #TODO its for make.com scenario to don't create handing of error. - change it for better solution in feature
+            return jsonify({"error": "User not found."}), 200
 
     except Exception as e:
         # Handle any errors that may occur
