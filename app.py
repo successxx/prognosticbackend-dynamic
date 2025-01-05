@@ -85,6 +85,14 @@ class ResultsTwo(db.Model):
     booking_button_redirection = db.Column(db.Text, nullable=True)  # Can be NULL
 
 
+class UserAudio(db.Model):
+    __tablename__ = 'user_audio'
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_email = db.Column(db.String, unique=True, nullable=False)
+    audio_link = db.Column(db.Text, nullable=True)
+
+
 def create_table_and_index_if_not_exists():
     with app.app_context():
         inspector = inspect(db.engine)
@@ -119,6 +127,13 @@ def create_table_and_index_if_not_exists():
             logger.info("Table 'results_two' created.")
         else:
             logger.info("Table 'results_two' already exists.")
+
+                # Check and create 'user_audio' table
+        if 'user_audio' not in inspector.get_table_names():
+            UserAudio.__table__.create(db.engine)
+            logger.info("Table 'user_audio' created.")
+        else:
+            logger.info("Table 'user_audio' already exists.")
 
         with db.engine.connect() as connection:
             # For each table, check and add columns and indexes
