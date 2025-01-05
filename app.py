@@ -1106,6 +1106,61 @@ def get_user_two():
         log_custom_message("Error while fetching user two", extra_data)
         return response
 
+##########################
+# AUDIO ENDPOINTS
+##########################
+@cross_origin()
+@app.route('/insert_audio', methods=['POST'])
+def insert_audio():
+    """
+    Example JSON body:
+    {
+      "user_email": "someone@example.com",
+      "audio_link": "https://drive.google.com/uc?export=download&id=FOO"
+    }
+    """
+    data = request.json
+    user_email = data.get('user_email')
+    audio_link = data.get('audio_link')
+
+    if not user_email or not audio_link:
+        return jsonify({"error": "Missing user_email or audio_link"}), 400
+
+    try:
+        existing = UserAudio.query.filter_by(user_email=user_email).first()
+        if existing:
+            existing.audio_link = audio_link
+            db.session.commit()
+            return jsonify({"message": "Audio updated successfully"}), 200
+        else:
+            new_audio = UserAudio(user_email=user_email, audio_link=audio_link)
+            db.session.add(new_audio)
+            db.session.commit()
+            return jsonify({"message": "Audio inserted successfully"}), 201
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+
+@cross_origin()
+@app.route('/get_audio', methods=['GET'])
+def get_audio():
+    """
+    Example query param usage:
+    GET /get_audio?user_email=someone@example.com
+    Returns {"audio_link": "..."} or {"audio_link": null} if not found.
+    """
+    user_email = request.args.get('user_email')
+    if not user_email:
+        return jsonify({"error": "No user_email provided"}), 400
+
+    try:
+        record = UserAudio.query.filter_by(user_email=user_email).first()
+        if record:
+            return jsonify({"audio_link": record.audio_link}), 200
+        else:
+            return jsonify({"audio_link": None}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=5001)
