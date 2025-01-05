@@ -91,6 +91,8 @@ class UserAudio(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_email = db.Column(db.String, unique=True, nullable=False)
     audio_link = db.Column(db.Text, nullable=True)
+    # NEW FIELD for storing an exit message
+    exit_message = db.Column(db.Text, nullable=True)
 
 
 def create_table_and_index_if_not_exists():
@@ -128,7 +130,7 @@ def create_table_and_index_if_not_exists():
         else:
             logger.info("Table 'results_two' already exists.")
 
-                # Check and create 'user_audio' table
+        # Check and create 'user_audio' table
         if 'user_audio' not in inspector.get_table_names():
             UserAudio.__table__.create(db.engine)
             logger.info("Table 'user_audio' created.")
@@ -205,6 +207,22 @@ def create_table_and_index_if_not_exists():
                 else:
                     logger.info(f"Index '{index_name}' already exists.")
 
+            # NOW check for 'exit_message' in user_audio
+            exit_msg_exists = connection.execute(text("""
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name = 'user_audio' AND column_name = 'exit_message';
+            """)).fetchone()
+
+            if not exit_msg_exists:
+                connection.execute(text("""
+                    ALTER TABLE user_audio
+                    ADD COLUMN exit_message TEXT;
+                """))
+                connection.commit()
+                logger.info("'exit_message' column added to 'user_audio'.")
+            else:
+                logger.info("'exit_message' column already exists in 'user_audio'.")
+
 
 # Call the function to create the tables and indexes if not present
 create_table_and_index_if_not_exists()
@@ -239,7 +257,7 @@ def insert_user():
         response.status_code = 400
         # Log the request and response (without text content)
         extra_data = {
-            "event_time": time.time(),  # Custom event time
+            "event_time": time.time(),  
             "method": request.method,
             "url": request.url,
             "remote_addr": request.remote_addr,
@@ -261,7 +279,7 @@ def insert_user():
             existing_user.booking_button_name = booking_button_name
             existing_user.booking_button_redirection = booking_button_redirection
             db.session.commit()
-            elapsed_time = time.time() - start_time  # Calculate execution time
+            elapsed_time = time.time() - start_time
             response = jsonify({'message': 'User updated successfully!', 'user_id': str(existing_user.user_id)})
             response.status_code = 200
 
@@ -294,7 +312,7 @@ def insert_user():
             )
             db.session.add(new_user)
             db.session.commit()
-            elapsed_time = time.time() - start_time  # Calculate execution time
+            elapsed_time = time.time() - start_time
             response = jsonify({'message': 'User added successfully!', 'user_id': str(new_user.user_id)})
             response.status_code = 201
 
@@ -315,14 +333,13 @@ def insert_user():
                 "elapsed_time": f"{elapsed_time:.4f} seconds",
             }
             log_custom_message("User added successfully", extra_data)
-
             return response
+
     except Exception as e:
         db.session.rollback()
         response = jsonify({'error': str(e)})
         response.status_code = 400
 
-        # Log the error
         extra_data = {
             "event_time": time.time(),
             "method": request.method,
@@ -343,14 +360,13 @@ def insert_user():
 
 @app.route('/get_user', methods=['POST'])
 def get_user():
-    start_time = time.time()  # Start tracking time
+    start_time = time.time()  
     data = request.get_json()
     user_email = data.get('user_email')
 
     if not user_email:
         response = jsonify({"error": "Email parameter is required"})
         response.status_code = 400
-        # Log the request and response (without user text content)
         extra_data = {
             "event_time": time.time(),
             "method": request.method,
@@ -376,11 +392,10 @@ def get_user():
                 "booking_button_redirection": user.booking_button_redirection,
                 "length": len(user.text)
             }
-            elapsed_time = time.time() - start_time  # Calculate execution time
+            elapsed_time = time.time() - start_time
             response = jsonify(response_data)
             response.status_code = 200
 
-            # Log the request and response (without user text content)
             extra_data = {
                 "event_time": time.time(),
                 "method": request.method,
@@ -394,7 +409,7 @@ def get_user():
                     "text": "Not produced, its too big",
                     "booking_button_name": user.booking_button_name,
                     "booking_button_redirection": user.booking_button_redirection,
-                    "length": len(user.text)  # Log only the length of the text, not the text itself
+                    "length": len(user.text)
                 },
                 "user_email": user_email,
                 "elapsed_time": f"{elapsed_time:.4f} seconds",
@@ -403,11 +418,10 @@ def get_user():
 
             return response
         else:
-            elapsed_time = time.time() - start_time  # Calculate execution time
+            elapsed_time = time.time() - start_time
             response = jsonify({"success": False, "message": "User not found"})
             response.status_code = 404
 
-            # Log the request and response (without user text content)
             extra_data = {
                 "event_time": time.time(),
                 "method": request.method,
@@ -422,11 +436,11 @@ def get_user():
             }
             log_custom_message("User not found", extra_data)
             return response
+
     except Exception as e:
         response = jsonify({"error": str(e)})
         response.status_code = 400
 
-        # Log the error
         extra_data = {
             "event_time": time.time(),
             "method": request.method,
@@ -448,7 +462,7 @@ def get_user():
 @cross_origin()
 @app.route('/insert_user_psych', methods=['POST'])
 def insert_user_psych():
-    start_time = time.time()  # Start tracking time
+    start_time = time.time()  
     data = request.json
     user_email = data.get('user_email')
     text_content = data.get('text')
@@ -458,9 +472,8 @@ def insert_user_psych():
     if not user_email:
         response = jsonify({'error': 'user_email is required'})
         response.status_code = 400
-        # Log the request and response (without text content)
         extra_data = {
-            "event_time": time.time(),  # Custom event time
+            "event_time": time.time(),  
             "method": request.method,
             "url": request.url,
             "remote_addr": request.remote_addr,
@@ -482,11 +495,10 @@ def insert_user_psych():
             existing_user.booking_button_name = booking_button_name
             existing_user.booking_button_redirection = booking_button_redirection
             db.session.commit()
-            elapsed_time = time.time() - start_time  # Calculate execution time
+            elapsed_time = time.time() - start_time
             response = jsonify({'message': 'User psych updated successfully!', 'user_id': str(existing_user.user_id)})
             response.status_code = 200
 
-            # Log the request and response (without the text)
             extra_data = {
                 "event_time": time.time(),
                 "method": request.method,
@@ -503,7 +515,6 @@ def insert_user_psych():
                 "elapsed_time": f"{elapsed_time:.4f} seconds",
             }
             log_custom_message("User psych updated successfully", extra_data)
-
             return response
         else:
             new_user = PrognosticPsych(
@@ -515,11 +526,10 @@ def insert_user_psych():
             )
             db.session.add(new_user)
             db.session.commit()
-            elapsed_time = time.time() - start_time  # Calculate execution time
+            elapsed_time = time.time() - start_time
             response = jsonify({'message': 'User psych added successfully!', 'user_id': str(new_user.user_id)})
             response.status_code = 201
 
-            # Log the request and response (without the text)
             extra_data = {
                 "event_time": time.time(),
                 "method": request.method,
@@ -536,14 +546,12 @@ def insert_user_psych():
                 "elapsed_time": f"{elapsed_time:.4f} seconds",
             }
             log_custom_message("User psych added successfully", extra_data)
-
             return response
     except Exception as e:
         db.session.rollback()
         response = jsonify({'error': str(e)})
         response.status_code = 400
 
-        # Log the error
         extra_data = {
             "event_time": time.time(),
             "method": request.method,
@@ -558,20 +566,18 @@ def insert_user_psych():
             "elapsed_time": f"{time.time() - start_time:.4f} seconds",
         }
         log_custom_message("Error while inserting user psych", extra_data)
-
         return response
 
 
 @app.route('/get_user_psych', methods=['POST'])
 def get_user_psych():
-    start_time = time.time()  # Start tracking time
+    start_time = time.time()  
     data = request.get_json()
     user_email = data.get('user_email')
 
     if not user_email:
         response = jsonify({"error": "Email parameter is required"})
         response.status_code = 400
-        # Log the request and response (without user text content)
         extra_data = {
             "event_time": time.time(),
             "method": request.method,
@@ -597,11 +603,10 @@ def get_user_psych():
                 "booking_button_redirection": user.booking_button_redirection,
                 "length": len(user.text)
             }
-            elapsed_time = time.time() - start_time  # Calculate execution time
+            elapsed_time = time.time() - start_time
             response = jsonify(response_data)
             response.status_code = 200
 
-            # Log the request and response (without user text content)
             extra_data = {
                 "event_time": time.time(),
                 "method": request.method,
@@ -615,7 +620,7 @@ def get_user_psych():
                     "text": "Not produced, its too big",
                     "booking_button_name": user.booking_button_name,
                     "booking_button_redirection": user.booking_button_redirection,
-                    "length": len(user.text)  # Log only the length of the text, not the text itself
+                    "length": len(user.text)
                 },
                 "user_email": user_email,
                 "elapsed_time": f"{elapsed_time:.4f} seconds",
@@ -624,11 +629,10 @@ def get_user_psych():
 
             return response
         else:
-            elapsed_time = time.time() - start_time  # Calculate execution time
+            elapsed_time = time.time() - start_time
             response = jsonify({"success": False, "message": "User not found"})
             response.status_code = 404
 
-            # Log the request and response (without user text content)
             extra_data = {
                 "event_time": time.time(),
                 "method": request.method,
@@ -647,7 +651,6 @@ def get_user_psych():
         response = jsonify({"error": str(e)})
         response.status_code = 400
 
-        # Log the error
         extra_data = {
             "event_time": time.time(),
             "method": request.method,
@@ -669,7 +672,7 @@ def get_user_psych():
 @cross_origin()
 @app.route('/insert_user_one', methods=['POST'])
 def insert_user_one():
-    start_time = time.time()  # Start tracking time
+    start_time = time.time()  
     data = request.json
     user_email = data.get('user_email')
     text_content = data.get('text')
@@ -679,9 +682,8 @@ def insert_user_one():
     if not user_email:
         response = jsonify({'error': 'user_email is required'})
         response.status_code = 400
-        # Log the request and response (without text content)
         extra_data = {
-            "event_time": time.time(),  # Custom event time
+            "event_time": time.time(),  
             "method": request.method,
             "url": request.url,
             "remote_addr": request.remote_addr,
@@ -703,11 +705,10 @@ def insert_user_one():
             existing_user.booking_button_name = booking_button_name
             existing_user.booking_button_redirection = booking_button_redirection
             db.session.commit()
-            elapsed_time = time.time() - start_time  # Calculate execution time
+            elapsed_time = time.time() - start_time
             response = jsonify({'message': 'User one updated successfully!', 'user_id': str(existing_user.user_id)})
             response.status_code = 200
 
-            # Log the request and response (without the text)
             extra_data = {
                 "event_time": time.time(),
                 "method": request.method,
@@ -724,7 +725,6 @@ def insert_user_one():
                 "elapsed_time": f"{elapsed_time:.4f} seconds",
             }
             log_custom_message("User one updated successfully", extra_data)
-
             return response
         else:
             new_user = ResultsOne(
@@ -736,11 +736,10 @@ def insert_user_one():
             )
             db.session.add(new_user)
             db.session.commit()
-            elapsed_time = time.time() - start_time  # Calculate execution time
+            elapsed_time = time.time() - start_time
             response = jsonify({'message': 'User one added successfully!', 'user_id': str(new_user.user_id)})
             response.status_code = 201
 
-            # Log the request and response (without the text)
             extra_data = {
                 "event_time": time.time(),
                 "method": request.method,
@@ -757,14 +756,12 @@ def insert_user_one():
                 "elapsed_time": f"{elapsed_time:.4f} seconds",
             }
             log_custom_message("User one added successfully", extra_data)
-
             return response
     except Exception as e:
         db.session.rollback()
         response = jsonify({'error': str(e)})
         response.status_code = 400
 
-        # Log the error
         extra_data = {
             "event_time": time.time(),
             "method": request.method,
@@ -779,14 +776,13 @@ def insert_user_one():
             "elapsed_time": f"{time.time() - start_time:.4f} seconds",
         }
         log_custom_message("Error while inserting user one", extra_data)
-
         return response
 
 
 @cross_origin()
 @app.route('/insert_user_two', methods=['POST'])
 def insert_user_two():
-    start_time = time.time()  # Start tracking time
+    start_time = time.time()  
     data = request.json
     user_email = data.get('user_email')
     text_content = data.get('text')
@@ -796,9 +792,8 @@ def insert_user_two():
     if not user_email:
         response = jsonify({'error': 'user_email is required'})
         response.status_code = 400
-        # Log the request and response (without text content)
         extra_data = {
-            "event_time": time.time(),  # Custom event time
+            "event_time": time.time(),  
             "method": request.method,
             "url": request.url,
             "remote_addr": request.remote_addr,
@@ -820,11 +815,10 @@ def insert_user_two():
             existing_user.booking_button_name = booking_button_name
             existing_user.booking_button_redirection = booking_button_redirection
             db.session.commit()
-            elapsed_time = time.time() - start_time  # Calculate execution time
+            elapsed_time = time.time() - start_time
             response = jsonify({'message': 'User two updated successfully!', 'user_id': str(existing_user.user_id)})
             response.status_code = 200
 
-            # Log the request and response (without the text)
             extra_data = {
                 "event_time": time.time(),
                 "method": request.method,
@@ -841,7 +835,6 @@ def insert_user_two():
                 "elapsed_time": f"{elapsed_time:.4f} seconds",
             }
             log_custom_message("User two updated successfully", extra_data)
-
             return response
         else:
             new_user = ResultsTwo(
@@ -853,11 +846,10 @@ def insert_user_two():
             )
             db.session.add(new_user)
             db.session.commit()
-            elapsed_time = time.time() - start_time  # Calculate execution time
+            elapsed_time = time.time() - start_time
             response = jsonify({'message': 'User two added successfully!', 'user_id': str(new_user.user_id)})
             response.status_code = 201
 
-            # Log the request and response (without the text)
             extra_data = {
                 "event_time": time.time(),
                 "method": request.method,
@@ -874,14 +866,12 @@ def insert_user_two():
                 "elapsed_time": f"{elapsed_time:.4f} seconds",
             }
             log_custom_message("User two added successfully", extra_data)
-
             return response
     except Exception as e:
         db.session.rollback()
         response = jsonify({'error': str(e)})
         response.status_code = 400
 
-        # Log the error
         extra_data = {
             "event_time": time.time(),
             "method": request.method,
@@ -896,21 +886,19 @@ def insert_user_two():
             "elapsed_time": f"{time.time() - start_time:.4f} seconds",
         }
         log_custom_message("Error while inserting user two", extra_data)
-
         return response
 
 
 # New endpoints for retrieving users from the 'results_one' and 'results_two' tables
 @app.route('/get_user_one', methods=['POST'])
 def get_user_one():
-    start_time = time.time()  # Start tracking time
+    start_time = time.time()  
     data = request.get_json()
     user_email = data.get('user_email')
 
     if not user_email:
         response = jsonify({"error": "Email parameter is required"})
         response.status_code = 400
-        # Log the request and response (without user text content)
         extra_data = {
             "event_time": time.time(),
             "method": request.method,
@@ -936,11 +924,10 @@ def get_user_one():
                 "booking_button_redirection": user.booking_button_redirection,
                 "length": len(user.text)
             }
-            elapsed_time = time.time() - start_time  # Calculate execution time
+            elapsed_time = time.time() - start_time
             response = jsonify(response_data)
             response.status_code = 200
 
-            # Log the request and response (without user text content)
             extra_data = {
                 "event_time": time.time(),
                 "method": request.method,
@@ -954,20 +941,18 @@ def get_user_one():
                     "text": "Not produced, its too big",
                     "booking_button_name": user.booking_button_name,
                     "booking_button_redirection": user.booking_button_redirection,
-                    "length": len(user.text)  # Log only the length of the text, not the text itself
+                    "length": len(user.text)  
                 },
                 "user_email": user_email,
                 "elapsed_time": f"{elapsed_time:.4f} seconds",
             }
             log_custom_message("Get user one operation", extra_data)
-
             return response
         else:
-            elapsed_time = time.time() - start_time  # Calculate execution time
+            elapsed_time = time.time() - start_time
             response = jsonify({"success": False, "message": "User not found"})
             response.status_code = 404
 
-            # Log the request and response (without user text content)
             extra_data = {
                 "event_time": time.time(),
                 "method": request.method,
@@ -986,7 +971,6 @@ def get_user_one():
         response = jsonify({"error": str(e)})
         response.status_code = 400
 
-        # Log the error
         extra_data = {
             "event_time": time.time(),
             "method": request.method,
@@ -1006,14 +990,13 @@ def get_user_one():
 
 @app.route('/get_user_two', methods=['POST'])
 def get_user_two():
-    start_time = time.time()  # Start tracking time
+    start_time = time.time()  
     data = request.get_json()
     user_email = data.get('user_email')
 
     if not user_email:
         response = jsonify({"error": "Email parameter is required"})
         response.status_code = 400
-        # Log the request and response (without user text content)
         extra_data = {
             "event_time": time.time(),
             "method": request.method,
@@ -1039,11 +1022,10 @@ def get_user_two():
                 "booking_button_redirection": user.booking_button_redirection,
                 "length": len(user.text)
             }
-            elapsed_time = time.time() - start_time  # Calculate execution time
+            elapsed_time = time.time() - start_time
             response = jsonify(response_data)
             response.status_code = 200
 
-            # Log the request and response (without user text content)
             extra_data = {
                 "event_time": time.time(),
                 "method": request.method,
@@ -1057,20 +1039,18 @@ def get_user_two():
                     "text": "Not produced, its too big",
                     "booking_button_name": user.booking_button_name,
                     "booking_button_redirection": user.booking_button_redirection,
-                    "length": len(user.text)  # Log only the length of the text, not the text itself
+                    "length": len(user.text)  
                 },
                 "user_email": user_email,
                 "elapsed_time": f"{elapsed_time:.4f} seconds",
             }
             log_custom_message("Get user two operation", extra_data)
-
             return response
         else:
-            elapsed_time = time.time() - start_time  # Calculate execution time
+            elapsed_time = time.time() - start_time
             response = jsonify({"success": False, "message": "User not found"})
             response.status_code = 404
 
-            # Log the request and response (without user text content)
             extra_data = {
                 "event_time": time.time(),
                 "method": request.method,
@@ -1089,7 +1069,6 @@ def get_user_two():
         response = jsonify({"error": str(e)})
         response.status_code = 400
 
-        # Log the error
         extra_data = {
             "event_time": time.time(),
             "method": request.method,
@@ -1106,6 +1085,7 @@ def get_user_two():
         log_custom_message("Error while fetching user two", extra_data)
         return response
 
+
 ##########################
 # AUDIO ENDPOINTS
 ##########################
@@ -1116,12 +1096,14 @@ def insert_audio():
     Example JSON body:
     {
       "user_email": "someone@example.com",
-      "audio_link": "https://drive.google.com/uc?export=download&id=FOO"
+      "audio_link": "https://drive.google.com/uc?export=download&id=FOO",
+      "exit_message": "some optional text"
     }
     """
     data = request.json
     user_email = data.get('user_email')
     audio_link = data.get('audio_link')
+    exit_message = data.get('exit_message', '')
 
     if not user_email or not audio_link:
         return jsonify({"error": "Missing user_email or audio_link"}), 400
@@ -1130,10 +1112,15 @@ def insert_audio():
         existing = UserAudio.query.filter_by(user_email=user_email).first()
         if existing:
             existing.audio_link = audio_link
+            existing.exit_message = exit_message
             db.session.commit()
             return jsonify({"message": "Audio updated successfully"}), 200
         else:
-            new_audio = UserAudio(user_email=user_email, audio_link=audio_link)
+            new_audio = UserAudio(
+                user_email=user_email,
+                audio_link=audio_link,
+                exit_message=exit_message
+            )
             db.session.add(new_audio)
             db.session.commit()
             return jsonify({"message": "Audio inserted successfully"}), 201
@@ -1141,13 +1128,14 @@ def insert_audio():
         db.session.rollback()
         return jsonify({"error": str(e)}), 500
 
+
 @cross_origin()
 @app.route('/get_audio', methods=['GET'])
 def get_audio():
     """
     Example query param usage:
     GET /get_audio?user_email=someone@example.com
-    Returns {"audio_link": "..."} or {"audio_link": null} if not found.
+    Returns {"audio_link": "...", "exit_message": "..."} or empty if not found.
     """
     user_email = request.args.get('user_email')
     if not user_email:
@@ -1156,11 +1144,18 @@ def get_audio():
     try:
         record = UserAudio.query.filter_by(user_email=user_email).first()
         if record:
-            return jsonify({"audio_link": record.audio_link}), 200
+            return jsonify({
+                "audio_link": record.audio_link,
+                "exit_message": record.exit_message if record.exit_message else ""
+            }), 200
         else:
-            return jsonify({"audio_link": None}), 200
+            return jsonify({
+                "audio_link": None,
+                "exit_message": ""
+            }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=5001)
