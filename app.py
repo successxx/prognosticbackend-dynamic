@@ -91,7 +91,7 @@ class UserAudio(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_email = db.Column(db.String, unique=True, nullable=False)
     audio_link = db.Column(db.Text, nullable=True)
-    # NEW FIELD for storing an exit message
+    audio_link_two = db.Column(db.Text, nullable=True)  # New field for second audio
     exit_message = db.Column(db.Text, nullable=True)
 
 
@@ -207,6 +207,22 @@ def create_table_and_index_if_not_exists():
                 else:
                     logger.info(f"Index '{index_name}' already exists.")
 
+            # Check for audio_link_two in user_audio
+            audio_link_two_exists = connection.execute(text("""
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name = 'user_audio' AND column_name = 'audio_link_two';
+            """)).fetchone()
+
+            if not audio_link_two_exists:
+                connection.execute(text("""
+                    ALTER TABLE user_audio
+                    ADD COLUMN audio_link_two TEXT;
+                """))
+                connection.commit()
+                logger.info("'audio_link_two' column added to 'user_audio'.")
+            else:
+                logger.info("'audio_link_two' column already exists in 'user_audio'.")
+
             # NOW check for 'exit_message' in user_audio
             exit_msg_exists = connection.execute(text("""
                 SELECT 1 FROM information_schema.columns
@@ -297,7 +313,7 @@ def insert_user():
                     "text": "Not produced, its too big",
                 },
                 "response_status": response.status_code,
-                "elapsed_time": f"{elapsed_time:.4f} seconds",
+"elapsed_time": f"{elapsed_time:.4f} seconds",
             }
             log_custom_message("User updated successfully", extra_data)
 
@@ -456,9 +472,7 @@ def get_user():
         }
         log_custom_message("Error while fetching user", extra_data)
         return response
-
-
-# Existing endpoints for 'prognostic_psych' table
+        # Existing endpoints for 'prognostic_psych' table
 @cross_origin()
 @app.route('/insert_user_psych', methods=['POST'])
 def insert_user_psych():
@@ -567,7 +581,7 @@ def insert_user_psych():
         }
         log_custom_message("Error while inserting user psych", extra_data)
         return response
-
+        # ... [previous code remains the same]
 
 @app.route('/get_user_psych', methods=['POST'])
 def get_user_psych():
@@ -1097,12 +1111,14 @@ def insert_audio():
     {
       "user_email": "someone@example.com",
       "audio_link": "https://drive.google.com/uc?export=download&id=FOO",
+      "audio_link_two": "https://drive.google.com/uc?export=download&id=BAR",
       "exit_message": "some optional text"
     }
     """
     data = request.json
     user_email = data.get('user_email')
     audio_link = data.get('audio_link')
+    audio_link_two = data.get('audio_link_two')
     exit_message = data.get('exit_message', '')
 
     if not user_email or not audio_link:
@@ -1112,6 +1128,7 @@ def insert_audio():
         existing = UserAudio.query.filter_by(user_email=user_email).first()
         if existing:
             existing.audio_link = audio_link
+            existing.audio_link_two = audio_link_two
             existing.exit_message = exit_message
             db.session.commit()
             return jsonify({"message": "Audio updated successfully"}), 200
@@ -1119,6 +1136,7 @@ def insert_audio():
             new_audio = UserAudio(
                 user_email=user_email,
                 audio_link=audio_link,
+                audio_link_two=audio_link_two,
                 exit_message=exit_message
             )
             db.session.add(new_audio)
@@ -1135,7 +1153,7 @@ def get_audio():
     """
     Example query param usage:
     GET /get_audio?user_email=someone@example.com
-    Returns {"audio_link": "...", "exit_message": "..."} or empty if not found.
+    Returns {"audio_link": "...", "audio_link_two": "...", "exit_message": "..."} or empty if not found.
     """
     user_email = request.args.get('user_email')
     if not user_email:
@@ -1146,11 +1164,13 @@ def get_audio():
         if record:
             return jsonify({
                 "audio_link": record.audio_link,
+                "audio_link_two": record.audio_link_two,
                 "exit_message": record.exit_message if record.exit_message else ""
             }), 200
         else:
             return jsonify({
                 "audio_link": None,
+                "audio_link_two": None,
                 "exit_message": ""
             }), 200
     except Exception as e:
