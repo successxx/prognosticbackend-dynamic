@@ -93,6 +93,7 @@ class UserAudio(db.Model):
     audio_link = db.Column(db.Text, nullable=True)
     audio_link_two = db.Column(db.Text, nullable=True)  # New field for second audio
     exit_message = db.Column(db.Text, nullable=True)
+    headline = db.Column(db.Text, nullable=True)
 
 
 def create_table_and_index_if_not_exists():
@@ -239,6 +240,21 @@ def create_table_and_index_if_not_exists():
             else:
                 logger.info("'exit_message' column already exists in 'user_audio'.")
 
+            # NOW check for 'headline' in user_audio
+            headline_exists = connection.execute(text("""
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name = 'user_audio' AND column_name = 'headline';
+            """)).fetchone()
+
+            if not headline_exists:
+                connection.execute(text("""
+                    ALTER TABLE user_audio
+                    ADD COLUMN headline TEXT;
+                """))
+                connection.commit()
+                logger.info("'headline' column added to 'user_audio'.")
+            else:
+                logger.info("'headline' column already exists in 'user_audio'.")
 
 # Call the function to create the tables and indexes if not present
 create_table_and_index_if_not_exists()
@@ -1113,6 +1129,7 @@ def insert_audio():
       "audio_link": "https://drive.google.com/uc?export=download&id=FOO",
       "audio_link_two": "https://drive.google.com/uc?export=download&id=BAR",
       "exit_message": "some optional text"
+      "headline": "some optional text"
     }
     """
     data = request.json
@@ -1120,6 +1137,7 @@ def insert_audio():
     audio_link = data.get('audio_link')
     audio_link_two = data.get('audio_link_two')
     exit_message = data.get('exit_message', '')
+    headline = data.get('headline', '')
 
     if not user_email or not audio_link:
         return jsonify({"error": "Missing user_email or audio_link"}), 400
@@ -1130,6 +1148,7 @@ def insert_audio():
             existing.audio_link = audio_link
             existing.audio_link_two = audio_link_two
             existing.exit_message = exit_message
+            existing.headline = headline
             db.session.commit()
             return jsonify({"message": "Audio updated successfully"}), 200
         else:
@@ -1137,7 +1156,8 @@ def insert_audio():
                 user_email=user_email,
                 audio_link=audio_link,
                 audio_link_two=audio_link_two,
-                exit_message=exit_message
+                exit_message=exit_message,
+                headline=headline
             )
             db.session.add(new_audio)
             db.session.commit()
@@ -1165,13 +1185,15 @@ def get_audio():
             return jsonify({
                 "audio_link": record.audio_link,
                 "audio_link_two": record.audio_link_two,
-                "exit_message": record.exit_message if record.exit_message else ""
+                "exit_message": record.exit_message if record.exit_message else "",
+                "headline": record.headline if record.headline else ""
             }), 200
         else:
             return jsonify({
                 "audio_link": None,
                 "audio_link_two": None,
-                "exit_message": ""
+                "exit_message": "",
+                "headline": ""
             }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
