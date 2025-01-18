@@ -1526,7 +1526,10 @@ def insert_audio():
                 offer_goal=offer_goal,
                 Offer_topic=Offer_topic,
                 target_url=target_url,
-                testimonials=testimonials
+                testimonials=testimonials,
+                email_1=email_1,
+                email_2=email_2,
+                salesletter=salesletter
             )
             db.session.add(new_audio)
             db.session.commit()
