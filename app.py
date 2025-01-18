@@ -112,6 +112,11 @@ class UserAudio(db.Model):
     target_url = db.Column(db.Text, nullable=True)
     testimonials = db.Column(db.Text, nullable=True)
 
+    # ADDING THE THREE EXTRA COLUMNS:
+    email_1 = db.Column(db.Text, nullable=True)
+    email_2 = db.Column(db.Text, nullable=True)
+    salesletter = db.Column(db.Text, nullable=True)
+
 
 def create_table_and_index_if_not_exists():
     with app.app_context():
@@ -273,7 +278,7 @@ def create_table_and_index_if_not_exists():
             else:
                 logger.info("'headline' column already exists in 'user_audio'.")
 
-            # NOW check for each new field in user_audio (same pattern as 'headline'):
+            # Check the newly added fields using the same pattern as 'headline':
             # company_name
             company_name_exists = connection.execute(text("""
                 SELECT 1 FROM information_schema.columns
@@ -514,6 +519,53 @@ def create_table_and_index_if_not_exists():
             else:
                 logger.info("'testimonials' column already exists in 'user_audio'.")
 
+            # NOW check for the 3 new columns: email_1, email_2, salesletter
+            email_1_exists = connection.execute(text("""
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name = 'user_audio' AND column_name = 'email_1';
+            """)).fetchone()
+
+            if not email_1_exists:
+                connection.execute(text("""
+                    ALTER TABLE user_audio
+                    ADD COLUMN email_1 TEXT;
+                """))
+                connection.commit()
+                logger.info("'email_1' column added to 'user_audio'.")
+            else:
+                logger.info("'email_1' column already exists in 'user_audio'.")
+
+            email_2_exists = connection.execute(text("""
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name = 'user_audio' AND column_name = 'email_2';
+            """)).fetchone()
+
+            if not email_2_exists:
+                connection.execute(text("""
+                    ALTER TABLE user_audio
+                    ADD COLUMN email_2 TEXT;
+                """))
+                connection.commit()
+                logger.info("'email_2' column added to 'user_audio'.")
+            else:
+                logger.info("'email_2' column already exists in 'user_audio'.")
+
+            salesletter_exists = connection.execute(text("""
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name = 'user_audio' AND column_name = 'salesletter';
+            """)).fetchone()
+
+            if not salesletter_exists:
+                connection.execute(text("""
+                    ALTER TABLE user_audio
+                    ADD COLUMN salesletter TEXT;
+                """))
+                connection.commit()
+                logger.info("'salesletter' column added to 'user_audio'.")
+            else:
+                logger.info("'salesletter' column already exists in 'user_audio'.")
+
+
 # Call the function to create the tables and indexes if not present
 create_table_and_index_if_not_exists()
 
@@ -547,7 +599,7 @@ def insert_user():
         response.status_code = 400
         # Log the request and response (without text content)
         extra_data = {
-            "event_time": time.time(),  
+            "event_time": time.time(),
             "method": request.method,
             "url": request.url,
             "remote_addr": request.remote_addr,
