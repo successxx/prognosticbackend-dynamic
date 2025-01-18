@@ -1433,24 +1433,18 @@ def get_user_two():
 @cross_origin()
 @app.route('/insert_audio', methods=['POST'])
 def insert_audio():
-    # Add this debug logging
-    logger.info(f"Received headers: {dict(request.headers)}")
-    logger.info(f"Received content-type: {request.headers.get('Content-Type')}")
-    logger.info(f"Received data: {request.get_data()}")
-    
-    # Add this validation
-    if not request.is_json:
-        return jsonify({"error": "Content-Type must be application/json"}), 400
-        
-    try:
-        data = request.get_json()
-    except Exception as e:
-        return jsonify({"error": f"Invalid JSON format: {str(e)}"}), 400
-
-    if not data:
-        return jsonify({"error": "Empty request body"}), 400
-
-    # Original function code starts here
+    """
+    Example JSON body:
+    {
+      "user_email": "someone@example.com",
+      "audio_link": "https://drive.google.com/uc?export=download&id=FOO",
+      "audio_link_two": "https://drive.google.com/uc?export=download&id=BAR",
+      "exit_message": "some optional text"
+      "headline": "some optional text"
+      -- plus new fields below, following the same pattern
+    }
+    """
+    data = request.json
     user_email = data.get('user_email')
     audio_link = data.get('audio_link')
     audio_link_two = data.get('audio_link_two')
