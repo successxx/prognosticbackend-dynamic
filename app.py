@@ -1467,6 +1467,9 @@ def insert_audio():
     Offer_topic = data.get('Offer_topic', '')
     target_url = data.get('target_url', '')
     testimonials = data.get('testimonials', '')
+    email_1 = data.get('email_1', '')
+    email_2 = data.get('email_2', '')
+    salesletter = data.get('salesletter', '')
 
     if not user_email or not audio_link:
         return jsonify({"error": "Missing user_email or audio_link"}), 400
@@ -1495,6 +1498,9 @@ def insert_audio():
             existing.Offer_topic = Offer_topic
             existing.target_url = target_url
             existing.testimonials = testimonials
+            existing.email_1 = email_1
+            existing.email_2 = email_2
+            existing.salesletter = salesletter
 
             db.session.commit()
             return jsonify({"message": "Audio updated successfully"}), 200
@@ -1565,7 +1571,10 @@ def get_audio():
                 "offer_goal": record.offer_goal if record.offer_goal else "",
                 "Offer_topic": record.Offer_topic if record.Offer_topic else "",
                 "target_url": record.target_url if record.target_url else "",
-                "testimonials": record.testimonials if record.testimonials else ""
+                "testimonials": record.testimonials if record.testimonials else "",
+                "email_1": record.email_1 if record.email_1 else "",
+                "email_2": record.email_2 if record.email_2 else "",
+                "salesletter": record.salesletter if record.salesletter else ""
             }), 200
         else:
             return jsonify({
@@ -1587,7 +1596,10 @@ def get_audio():
                 "offer_goal": "",
                 "Offer_topic": "",
                 "target_url": "",
-                "testimonials": ""
+                "testimonials": "",
+                "email_1": "",
+                "email_2": "",
+                "salesletter": ""
             }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
