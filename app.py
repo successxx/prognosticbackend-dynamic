@@ -95,6 +95,23 @@ class UserAudio(db.Model):
     exit_message = db.Column(db.Text, nullable=True)
     headline = db.Column(db.Text, nullable=True)
 
+    # NEW FIELDS ADDED EXACTLY LIKE THE 'headline' FIELD:
+    company_name = db.Column(db.Text, nullable=True)
+    Industry = db.Column(db.Text, nullable=True)
+    Products_services = db.Column(db.Text, nullable=True)
+    Business_description = db.Column(db.Text, nullable=True)
+    primary_goal = db.Column(db.Text, nullable=True)
+    target_audience = db.Column(db.Text, nullable=True)
+    pain_points = db.Column(db.Text, nullable=True)
+    offer_name = db.Column(db.Text, nullable=True)
+    offer_price = db.Column(db.Text, nullable=True)
+    offer_description = db.Column(db.Text, nullable=True)
+    primary_benefits = db.Column(db.Text, nullable=True)
+    offer_goal = db.Column(db.Text, nullable=True)
+    Offer_topic = db.Column(db.Text, nullable=True)
+    target_url = db.Column(db.Text, nullable=True)
+    testimonials = db.Column(db.Text, nullable=True)
+
 
 def create_table_and_index_if_not_exists():
     with app.app_context():
@@ -256,6 +273,247 @@ def create_table_and_index_if_not_exists():
             else:
                 logger.info("'headline' column already exists in 'user_audio'.")
 
+            # NOW check for each new field in user_audio (same pattern as 'headline'):
+            # company_name
+            company_name_exists = connection.execute(text("""
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name = 'user_audio' AND column_name = 'company_name';
+            """)).fetchone()
+
+            if not company_name_exists:
+                connection.execute(text("""
+                    ALTER TABLE user_audio
+                    ADD COLUMN company_name TEXT;
+                """))
+                connection.commit()
+                logger.info("'company_name' column added to 'user_audio'.")
+            else:
+                logger.info("'company_name' column already exists in 'user_audio'.")
+
+            # Industry
+            Industry_exists = connection.execute(text("""
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name = 'user_audio' AND column_name = 'Industry';
+            """)).fetchone()
+
+            if not Industry_exists:
+                connection.execute(text("""
+                    ALTER TABLE user_audio
+                    ADD COLUMN "Industry" TEXT;
+                """))
+                connection.commit()
+                logger.info("'Industry' column added to 'user_audio'.")
+            else:
+                logger.info("'Industry' column already exists in 'user_audio'.")
+
+            # Products_services
+            Products_services_exists = connection.execute(text("""
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name = 'user_audio' AND column_name = 'Products_services';
+            """)).fetchone()
+
+            if not Products_services_exists:
+                connection.execute(text("""
+                    ALTER TABLE user_audio
+                    ADD COLUMN "Products_services" TEXT;
+                """))
+                connection.commit()
+                logger.info("'Products_services' column added to 'user_audio'.")
+            else:
+                logger.info("'Products_services' column already exists in 'user_audio'.")
+
+            # Business_description
+            Business_description_exists = connection.execute(text("""
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name = 'user_audio' AND column_name = 'Business_description';
+            """)).fetchone()
+
+            if not Business_description_exists:
+                connection.execute(text("""
+                    ALTER TABLE user_audio
+                    ADD COLUMN "Business_description" TEXT;
+                """))
+                connection.commit()
+                logger.info("'Business_description' column added to 'user_audio'.")
+            else:
+                logger.info("'Business_description' column already exists in 'user_audio'.")
+
+            # primary_goal
+            primary_goal_exists = connection.execute(text("""
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name = 'user_audio' AND column_name = 'primary_goal';
+            """)).fetchone()
+
+            if not primary_goal_exists:
+                connection.execute(text("""
+                    ALTER TABLE user_audio
+                    ADD COLUMN primary_goal TEXT;
+                """))
+                connection.commit()
+                logger.info("'primary_goal' column added to 'user_audio'.")
+            else:
+                logger.info("'primary_goal' column already exists in 'user_audio'.")
+
+            # target_audience
+            target_audience_exists = connection.execute(text("""
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name = 'user_audio' AND column_name = 'target_audience';
+            """)).fetchone()
+
+            if not target_audience_exists:
+                connection.execute(text("""
+                    ALTER TABLE user_audio
+                    ADD COLUMN target_audience TEXT;
+                """))
+                connection.commit()
+                logger.info("'target_audience' column added to 'user_audio'.")
+            else:
+                logger.info("'target_audience' column already exists in 'user_audio'.")
+
+            # pain_points
+            pain_points_exists = connection.execute(text("""
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name = 'user_audio' AND column_name = 'pain_points';
+            """)).fetchone()
+
+            if not pain_points_exists:
+                connection.execute(text("""
+                    ALTER TABLE user_audio
+                    ADD COLUMN pain_points TEXT;
+                """))
+                connection.commit()
+                logger.info("'pain_points' column added to 'user_audio'.")
+            else:
+                logger.info("'pain_points' column already exists in 'user_audio'.")
+
+            # offer_name
+            offer_name_exists = connection.execute(text("""
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name = 'user_audio' AND column_name = 'offer_name';
+            """)).fetchone()
+
+            if not offer_name_exists:
+                connection.execute(text("""
+                    ALTER TABLE user_audio
+                    ADD COLUMN offer_name TEXT;
+                """))
+                connection.commit()
+                logger.info("'offer_name' column added to 'user_audio'.")
+            else:
+                logger.info("'offer_name' column already exists in 'user_audio'.")
+
+            # offer_price
+            offer_price_exists = connection.execute(text("""
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name = 'user_audio' AND column_name = 'offer_price';
+            """)).fetchone()
+
+            if not offer_price_exists:
+                connection.execute(text("""
+                    ALTER TABLE user_audio
+                    ADD COLUMN offer_price TEXT;
+                """))
+                connection.commit()
+                logger.info("'offer_price' column added to 'user_audio'.")
+            else:
+                logger.info("'offer_price' column already exists in 'user_audio'.")
+
+            # offer_description
+            offer_description_exists = connection.execute(text("""
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name = 'user_audio' AND column_name = 'offer_description';
+            """)).fetchone()
+
+            if not offer_description_exists:
+                connection.execute(text("""
+                    ALTER TABLE user_audio
+                    ADD COLUMN offer_description TEXT;
+                """))
+                connection.commit()
+                logger.info("'offer_description' column added to 'user_audio'.")
+            else:
+                logger.info("'offer_description' column already exists in 'user_audio'.")
+
+            # primary_benefits
+            primary_benefits_exists = connection.execute(text("""
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name = 'user_audio' AND column_name = 'primary_benefits';
+            """)).fetchone()
+
+            if not primary_benefits_exists:
+                connection.execute(text("""
+                    ALTER TABLE user_audio
+                    ADD COLUMN primary_benefits TEXT;
+                """))
+                connection.commit()
+                logger.info("'primary_benefits' column added to 'user_audio'.")
+            else:
+                logger.info("'primary_benefits' column already exists in 'user_audio'.")
+
+            # offer_goal
+            offer_goal_exists = connection.execute(text("""
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name = 'user_audio' AND column_name = 'offer_goal';
+            """)).fetchone()
+
+            if not offer_goal_exists:
+                connection.execute(text("""
+                    ALTER TABLE user_audio
+                    ADD COLUMN offer_goal TEXT;
+                """))
+                connection.commit()
+                logger.info("'offer_goal' column added to 'user_audio'.")
+            else:
+                logger.info("'offer_goal' column already exists in 'user_audio'.")
+
+            # Offer_topic
+            Offer_topic_exists = connection.execute(text("""
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name = 'user_audio' AND column_name = 'Offer_topic';
+            """)).fetchone()
+
+            if not Offer_topic_exists:
+                connection.execute(text("""
+                    ALTER TABLE user_audio
+                    ADD COLUMN "Offer_topic" TEXT;
+                """))
+                connection.commit()
+                logger.info("'Offer_topic' column added to 'user_audio'.")
+            else:
+                logger.info("'Offer_topic' column already exists in 'user_audio'.")
+
+            # target_url
+            target_url_exists = connection.execute(text("""
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name = 'user_audio' AND column_name = 'target_url';
+            """)).fetchone()
+
+            if not target_url_exists:
+                connection.execute(text("""
+                    ALTER TABLE user_audio
+                    ADD COLUMN target_url TEXT;
+                """))
+                connection.commit()
+                logger.info("'target_url' column added to 'user_audio'.")
+            else:
+                logger.info("'target_url' column already exists in 'user_audio'.")
+
+            # testimonials
+            testimonials_exists = connection.execute(text("""
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name = 'user_audio' AND column_name = 'testimonials';
+            """)).fetchone()
+
+            if not testimonials_exists:
+                connection.execute(text("""
+                    ALTER TABLE user_audio
+                    ADD COLUMN testimonials TEXT;
+                """))
+                connection.commit()
+                logger.info("'testimonials' column added to 'user_audio'.")
+            else:
+                logger.info("'testimonials' column already exists in 'user_audio'.")
+
 # Call the function to create the tables and indexes if not present
 create_table_and_index_if_not_exists()
 
@@ -329,7 +587,7 @@ def insert_user():
                     "text": "Not produced, its too big",
                 },
                 "response_status": response.status_code,
-"elapsed_time": f"{elapsed_time:.4f} seconds",
+                "elapsed_time": f"{elapsed_time:.4f} seconds",
             }
             log_custom_message("User updated successfully", extra_data)
 
@@ -488,7 +746,8 @@ def get_user():
         }
         log_custom_message("Error while fetching user", extra_data)
         return response
-        # Existing endpoints for 'prognostic_psych' table
+
+# Existing endpoints for 'prognostic_psych' table
 @cross_origin()
 @app.route('/insert_user_psych', methods=['POST'])
 def insert_user_psych():
@@ -597,7 +856,7 @@ def insert_user_psych():
         }
         log_custom_message("Error while inserting user psych", extra_data)
         return response
-        # ... [previous code remains the same]
+
 
 @app.route('/get_user_psych', methods=['POST'])
 def get_user_psych():
@@ -1130,6 +1389,7 @@ def insert_audio():
       "audio_link_two": "https://drive.google.com/uc?export=download&id=BAR",
       "exit_message": "some optional text"
       "headline": "some optional text"
+      -- plus new fields below, following the same pattern
     }
     """
     data = request.json
@@ -1138,6 +1398,23 @@ def insert_audio():
     audio_link_two = data.get('audio_link_two')
     exit_message = data.get('exit_message', '')
     headline = data.get('headline', '')
+
+    # NEW FIELDS EXACTLY LIKE HEADLINE
+    company_name = data.get('company_name', '')
+    Industry = data.get('Industry', '')
+    Products_services = data.get('Products_services', '')
+    Business_description = data.get('Business_description', '')
+    primary_goal = data.get('primary_goal', '')
+    target_audience = data.get('target_audience', '')
+    pain_points = data.get('pain_points', '')
+    offer_name = data.get('offer_name', '')
+    offer_price = data.get('offer_price', '')
+    offer_description = data.get('offer_description', '')
+    primary_benefits = data.get('primary_benefits', '')
+    offer_goal = data.get('offer_goal', '')
+    Offer_topic = data.get('Offer_topic', '')
+    target_url = data.get('target_url', '')
+    testimonials = data.get('testimonials', '')
 
     if not user_email or not audio_link:
         return jsonify({"error": "Missing user_email or audio_link"}), 400
@@ -1149,6 +1426,24 @@ def insert_audio():
             existing.audio_link_two = audio_link_two
             existing.exit_message = exit_message
             existing.headline = headline
+
+            # Assign new fields
+            existing.company_name = company_name
+            existing.Industry = Industry
+            existing.Products_services = Products_services
+            existing.Business_description = Business_description
+            existing.primary_goal = primary_goal
+            existing.target_audience = target_audience
+            existing.pain_points = pain_points
+            existing.offer_name = offer_name
+            existing.offer_price = offer_price
+            existing.offer_description = offer_description
+            existing.primary_benefits = primary_benefits
+            existing.offer_goal = offer_goal
+            existing.Offer_topic = Offer_topic
+            existing.target_url = target_url
+            existing.testimonials = testimonials
+
             db.session.commit()
             return jsonify({"message": "Audio updated successfully"}), 200
         else:
@@ -1157,7 +1452,23 @@ def insert_audio():
                 audio_link=audio_link,
                 audio_link_two=audio_link_two,
                 exit_message=exit_message,
-                headline=headline
+                headline=headline,
+                # New fields
+                company_name=company_name,
+                Industry=Industry,
+                Products_services=Products_services,
+                Business_description=Business_description,
+                primary_goal=primary_goal,
+                target_audience=target_audience,
+                pain_points=pain_points,
+                offer_name=offer_name,
+                offer_price=offer_price,
+                offer_description=offer_description,
+                primary_benefits=primary_benefits,
+                offer_goal=offer_goal,
+                Offer_topic=Offer_topic,
+                target_url=target_url,
+                testimonials=testimonials
             )
             db.session.add(new_audio)
             db.session.commit()
@@ -1173,7 +1484,7 @@ def get_audio():
     """
     Example query param usage:
     GET /get_audio?user_email=someone@example.com
-    Returns {"audio_link": "...", "audio_link_two": "...", "exit_message": "..."} or empty if not found.
+    Returns {"audio_link": "...", "audio_link_two": "...", "exit_message": "...", "headline": "...", ... } or empty if not found.
     """
     user_email = request.args.get('user_email')
     if not user_email:
@@ -1186,14 +1497,45 @@ def get_audio():
                 "audio_link": record.audio_link,
                 "audio_link_two": record.audio_link_two,
                 "exit_message": record.exit_message if record.exit_message else "",
-                "headline": record.headline if record.headline else ""
+                "headline": record.headline if record.headline else "",
+                # Return the new fields exactly like 'headline'
+                "company_name": record.company_name if record.company_name else "",
+                "Industry": record.Industry if record.Industry else "",
+                "Products_services": record.Products_services if record.Products_services else "",
+                "Business_description": record.Business_description if record.Business_description else "",
+                "primary_goal": record.primary_goal if record.primary_goal else "",
+                "target_audience": record.target_audience if record.target_audience else "",
+                "pain_points": record.pain_points if record.pain_points else "",
+                "offer_name": record.offer_name if record.offer_name else "",
+                "offer_price": record.offer_price if record.offer_price else "",
+                "offer_description": record.offer_description if record.offer_description else "",
+                "primary_benefits": record.primary_benefits if record.primary_benefits else "",
+                "offer_goal": record.offer_goal if record.offer_goal else "",
+                "Offer_topic": record.Offer_topic if record.Offer_topic else "",
+                "target_url": record.target_url if record.target_url else "",
+                "testimonials": record.testimonials if record.testimonials else ""
             }), 200
         else:
             return jsonify({
                 "audio_link": None,
                 "audio_link_two": None,
                 "exit_message": "",
-                "headline": ""
+                "headline": "",
+                "company_name": "",
+                "Industry": "",
+                "Products_services": "",
+                "Business_description": "",
+                "primary_goal": "",
+                "target_audience": "",
+                "pain_points": "",
+                "offer_name": "",
+                "offer_price": "",
+                "offer_description": "",
+                "primary_benefits": "",
+                "offer_goal": "",
+                "Offer_topic": "",
+                "target_url": "",
+                "testimonials": ""
             }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
