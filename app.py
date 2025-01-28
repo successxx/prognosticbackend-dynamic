@@ -117,6 +117,12 @@ class UserAudio(db.Model):
     email_2 = db.Column(db.Text, nullable=True)
     salesletter = db.Column(db.Text, nullable=True)
 
+    # FOUR NEW FIELDS EXACTLY LIKE THE ABOVE PATTERN:
+    user_name = db.Column(db.Text, nullable=True)
+    website_url = db.Column(db.Text, nullable=True)
+    lead_email = db.Column(db.Text, nullable=True)
+    offer_url = db.Column(db.Text, nullable=True)
+
 
 def create_table_and_index_if_not_exists():
     with app.app_context():
@@ -131,7 +137,6 @@ def create_table_and_index_if_not_exists():
 
         # Now check and create 'prognostic_psych' table
         if 'prognostic_psych' not in inspector.get_table_names():
-            # Create only the PrognosticPsych table
             PrognosticPsych.__table__.create(db.engine)
             logger.info("Table 'prognostic_psych' created.")
         else:
@@ -139,7 +144,6 @@ def create_table_and_index_if_not_exists():
 
         # Now check and create 'results_one' table
         if 'results_one' not in inspector.get_table_names():
-            # Create only the ResultsOne table
             ResultsOne.__table__.create(db.engine)
             logger.info("Table 'results_one' created.")
         else:
@@ -147,7 +151,6 @@ def create_table_and_index_if_not_exists():
 
         # Now check and create 'results_two' table
         if 'results_two' not in inspector.get_table_names():
-            # Create only the ResultsTwo table
             ResultsTwo.__table__.create(db.engine)
             logger.info("Table 'results_two' created.")
         else:
@@ -163,7 +166,7 @@ def create_table_and_index_if_not_exists():
         with db.engine.connect() as connection:
             # For each table, check and add columns and indexes
             for table_name in ['prognostic_psych', 'results_one', 'results_two']:
-                # Check for 'created_at' column and add it if necessary
+                # Check for 'created_at' column
                 created_at_exists = connection.execute(text(f"""
                     SELECT 1 FROM information_schema.columns 
                     WHERE table_name = '{table_name}' AND column_name = 'created_at';
@@ -179,7 +182,7 @@ def create_table_and_index_if_not_exists():
                 else:
                     logger.info(f"'created_at' column already exists in '{table_name}'.")
 
-                # Check for 'booking_button_name' column and add it if necessary
+                # Check for 'booking_button_name' column
                 booking_button_name_exists = connection.execute(text(f"""
                     SELECT 1 FROM information_schema.columns 
                     WHERE table_name = '{table_name}' AND column_name = 'booking_button_name';
@@ -195,7 +198,7 @@ def create_table_and_index_if_not_exists():
                 else:
                     logger.info(f"'booking_button_name' column already exists in '{table_name}'.")
 
-                # Check for 'booking_button_redirection' column and add it if necessary
+                # Check for 'booking_button_redirection' column
                 booking_button_redirection_exists = connection.execute(text(f"""
                     SELECT 1 FROM information_schema.columns 
                     WHERE table_name = '{table_name}' AND column_name = 'booking_button_redirection';
@@ -211,10 +214,11 @@ def create_table_and_index_if_not_exists():
                 else:
                     logger.info(f"'booking_button_redirection' column already exists in '{table_name}'.")
 
-                # Check if index on 'user_email' exists and create it if necessary
+                # Check if index on 'user_email' exists
                 index_name = f'idx_user_email_{table_name}'
                 index_exists = connection.execute(text(f"""
-                    SELECT indexname FROM pg_indexes WHERE tablename = '{table_name}' AND indexname = '{index_name}';
+                    SELECT indexname FROM pg_indexes 
+                    WHERE tablename = '{table_name}' AND indexname = '{index_name}';
                 """)).fetchone()
 
                 if not index_exists:
@@ -223,7 +227,7 @@ def create_table_and_index_if_not_exists():
                     """)
                     try:
                         connection.execute(create_index_query)
-                        connection.commit()  # Explicitly commit the transaction
+                        connection.commit()
                         logger.info(f"Index '{index_name}' created.")
                     except Exception as e:
                         logger.error(f"Failed to create index on '{table_name}': {e}")
@@ -246,7 +250,7 @@ def create_table_and_index_if_not_exists():
             else:
                 logger.info("'audio_link_two' column already exists in 'user_audio'.")
 
-            # NOW check for 'exit_message' in user_audio
+            # check for 'exit_message'
             exit_msg_exists = connection.execute(text("""
                 SELECT 1 FROM information_schema.columns
                 WHERE table_name = 'user_audio' AND column_name = 'exit_message';
@@ -262,7 +266,7 @@ def create_table_and_index_if_not_exists():
             else:
                 logger.info("'exit_message' column already exists in 'user_audio'.")
 
-            # NOW check for 'headline' in user_audio
+            # check for 'headline'
             headline_exists = connection.execute(text("""
                 SELECT 1 FROM information_schema.columns
                 WHERE table_name = 'user_audio' AND column_name = 'headline';
@@ -278,7 +282,6 @@ def create_table_and_index_if_not_exists():
             else:
                 logger.info("'headline' column already exists in 'user_audio'.")
 
-            # Check the newly added fields using the same pattern as 'headline':
             # company_name
             company_name_exists = connection.execute(text("""
                 SELECT 1 FROM information_schema.columns
@@ -565,6 +568,63 @@ def create_table_and_index_if_not_exists():
             else:
                 logger.info("'salesletter' column already exists in 'user_audio'.")
 
+            # FINALLY, check for the 4 new columns: user_name, website_url, lead_email, offer_url
+            user_name_exists = connection.execute(text("""
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name = 'user_audio' AND column_name = 'user_name';
+            """)).fetchone()
+            if not user_name_exists:
+                connection.execute(text("""
+                    ALTER TABLE user_audio
+                    ADD COLUMN user_name TEXT;
+                """))
+                connection.commit()
+                logger.info("'user_name' column added to 'user_audio'.")
+            else:
+                logger.info("'user_name' column already exists in 'user_audio'.")
+
+            website_url_exists = connection.execute(text("""
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name = 'user_audio' AND column_name = 'website_url';
+            """)).fetchone()
+            if not website_url_exists:
+                connection.execute(text("""
+                    ALTER TABLE user_audio
+                    ADD COLUMN website_url TEXT;
+                """))
+                connection.commit()
+                logger.info("'website_url' column added to 'user_audio'.")
+            else:
+                logger.info("'website_url' column already exists in 'user_audio'.")
+
+            lead_email_exists = connection.execute(text("""
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name = 'user_audio' AND column_name = 'lead_email';
+            """)).fetchone()
+            if not lead_email_exists:
+                connection.execute(text("""
+                    ALTER TABLE user_audio
+                    ADD COLUMN lead_email TEXT;
+                """))
+                connection.commit()
+                logger.info("'lead_email' column added to 'user_audio'.")
+            else:
+                logger.info("'lead_email' column already exists in 'user_audio'.")
+
+            offer_url_exists = connection.execute(text("""
+                SELECT 1 FROM information_schema.columns
+                WHERE table_name = 'user_audio' AND column_name = 'offer_url';
+            """)).fetchone()
+            if not offer_url_exists:
+                connection.execute(text("""
+                    ALTER TABLE user_audio
+                    ADD COLUMN offer_url TEXT;
+                """))
+                connection.commit()
+                logger.info("'offer_url' column added to 'user_audio'.")
+            else:
+                logger.info("'offer_url' column already exists in 'user_audio'.")
+
 
 # Call the function to create the tables and indexes if not present
 create_table_and_index_if_not_exists()
@@ -702,7 +762,7 @@ def insert_user():
 
 @app.route('/get_user', methods=['POST'])
 def get_user():
-    start_time = time.time()  
+    start_time = time.time()
     data = request.get_json()
     user_email = data.get('user_email')
 
@@ -803,7 +863,7 @@ def get_user():
 @cross_origin()
 @app.route('/insert_user_psych', methods=['POST'])
 def insert_user_psych():
-    start_time = time.time()  
+    start_time = time.time()
     data = request.json
     user_email = data.get('user_email')
     text_content = data.get('text')
@@ -814,7 +874,7 @@ def insert_user_psych():
         response = jsonify({'error': 'user_email is required'})
         response.status_code = 400
         extra_data = {
-            "event_time": time.time(),  
+            "event_time": time.time(),
             "method": request.method,
             "url": request.url,
             "remote_addr": request.remote_addr,
@@ -912,7 +972,7 @@ def insert_user_psych():
 
 @app.route('/get_user_psych', methods=['POST'])
 def get_user_psych():
-    start_time = time.time()  
+    start_time = time.time()
     data = request.get_json()
     user_email = data.get('user_email')
 
@@ -1013,7 +1073,7 @@ def get_user_psych():
 @cross_origin()
 @app.route('/insert_user_one', methods=['POST'])
 def insert_user_one():
-    start_time = time.time()  
+    start_time = time.time()
     data = request.json
     user_email = data.get('user_email')
     text_content = data.get('text')
@@ -1024,7 +1084,7 @@ def insert_user_one():
         response = jsonify({'error': 'user_email is required'})
         response.status_code = 400
         extra_data = {
-            "event_time": time.time(),  
+            "event_time": time.time(),
             "method": request.method,
             "url": request.url,
             "remote_addr": request.remote_addr,
@@ -1123,7 +1183,7 @@ def insert_user_one():
 @cross_origin()
 @app.route('/insert_user_two', methods=['POST'])
 def insert_user_two():
-    start_time = time.time()  
+    start_time = time.time()
     data = request.json
     user_email = data.get('user_email')
     text_content = data.get('text')
@@ -1134,7 +1194,7 @@ def insert_user_two():
         response = jsonify({'error': 'user_email is required'})
         response.status_code = 400
         extra_data = {
-            "event_time": time.time(),  
+            "event_time": time.time(),
             "method": request.method,
             "url": request.url,
             "remote_addr": request.remote_addr,
@@ -1233,7 +1293,7 @@ def insert_user_two():
 # New endpoints for retrieving users from the 'results_one' and 'results_two' tables
 @app.route('/get_user_one', methods=['POST'])
 def get_user_one():
-    start_time = time.time()  
+    start_time = time.time()
     data = request.get_json()
     user_email = data.get('user_email')
 
@@ -1331,7 +1391,7 @@ def get_user_one():
 
 @app.route('/get_user_two', methods=['POST'])
 def get_user_two():
-    start_time = time.time()  
+    start_time = time.time()
     data = request.get_json()
     user_email = data.get('user_email')
 
@@ -1436,22 +1496,24 @@ def insert_audio():
     """
     Example JSON body:
     {
-      "user_email": "someone@example.com",
-      "audio_link": "https://drive.google.com/uc?export=download&id=FOO",
-      "audio_link_two": "https://drive.google.com/uc?export=download&id=BAR",
-      "exit_message": "some optional text"
-      "headline": "some optional text"
+      "lead_email": "someone@example.com",
+      "audio_link": "...",
+      "audio_link_two": "...",
+      "exit_message": "...",
+      "headline": "...",
       -- plus new fields below, following the same pattern
     }
     """
     data = request.json
-    user_email = data.get('user_email')
+
+    # Instead of user_email, we use lead_email now:
+    lead_email = data.get('lead_email')
     audio_link = data.get('audio_link')
-    audio_link_two = data.get('audio_link_two')
+    audio_link_two = data.get('audio_link_two', '')
     exit_message = data.get('exit_message', '')
     headline = data.get('headline', '')
 
-    # NEW FIELDS EXACTLY LIKE HEADLINE
+    # The existing dynamic fields:
     company_name = data.get('company_name', '')
     Industry = data.get('Industry', '')
     Products_services = data.get('Products_services', '')
@@ -1471,18 +1533,23 @@ def insert_audio():
     email_2 = data.get('email_2', '')
     salesletter = data.get('salesletter', '')
 
-    if not user_email or not audio_link:
-        return jsonify({"error": "Missing user_email or audio_link"}), 400
+    # The 4 new fields:
+    user_name = data.get('user_name', '')
+    website_url = data.get('website_url', '')
+    offer_url = data.get('offer_url', '')
+
+    # Must have lead_email (instead of user_email) and audio_link
+    if not lead_email or not audio_link:
+        return jsonify({"error": "Missing lead_email or audio_link"}), 400
 
     try:
-        existing = UserAudio.query.filter_by(user_email=user_email).first()
+        existing = UserAudio.query.filter_by(lead_email=lead_email).first()
         if existing:
             existing.audio_link = audio_link
             existing.audio_link_two = audio_link_two
             existing.exit_message = exit_message
             existing.headline = headline
 
-            # Assign new fields
             existing.company_name = company_name
             existing.Industry = Industry
             existing.Products_services = Products_services
@@ -1502,16 +1569,22 @@ def insert_audio():
             existing.email_2 = email_2
             existing.salesletter = salesletter
 
+            # 4 new dynamic fields:
+            existing.user_name = user_name
+            existing.website_url = website_url
+            existing.lead_email = lead_email
+            existing.offer_url = offer_url
+
             db.session.commit()
             return jsonify({"message": "Audio updated successfully"}), 200
         else:
             new_audio = UserAudio(
-                user_email=user_email,
+                user_email="",   # We do NOT remove the original user_email field, but it's empty for new records
+                lead_email=lead_email,
                 audio_link=audio_link,
                 audio_link_two=audio_link_two,
                 exit_message=exit_message,
                 headline=headline,
-                # New fields
                 company_name=company_name,
                 Industry=Industry,
                 Products_services=Products_services,
@@ -1529,7 +1602,10 @@ def insert_audio():
                 testimonials=testimonials,
                 email_1=email_1,
                 email_2=email_2,
-                salesletter=salesletter
+                salesletter=salesletter,
+                user_name=user_name,
+                website_url=website_url,
+                offer_url=offer_url
             )
             db.session.add(new_audio)
             db.session.commit()
@@ -1544,22 +1620,21 @@ def insert_audio():
 def get_audio():
     """
     Example query param usage:
-    GET /get_audio?user_email=someone@example.com
-    Returns {"audio_link": "...", "audio_link_two": "...", "exit_message": "...", "headline": "...", ... } or empty if not found.
+    GET /get_audio?lead_email=someone@example.com
+    Now we look up by lead_email, not user_email.
     """
-    user_email = request.args.get('user_email')
-    if not user_email:
-        return jsonify({"error": "No user_email provided"}), 400
+    lead_email = request.args.get('lead_email')
+    if not lead_email:
+        return jsonify({"error": "No lead_email provided"}), 400
 
     try:
-        record = UserAudio.query.filter_by(user_email=user_email).first()
+        record = UserAudio.query.filter_by(lead_email=lead_email).first()
         if record:
             return jsonify({
                 "audio_link": record.audio_link,
-                "audio_link_two": record.audio_link_two,
+                "audio_link_two": record.audio_link_two if record.audio_link_two else "",
                 "exit_message": record.exit_message if record.exit_message else "",
                 "headline": record.headline if record.headline else "",
-                # Return the new fields exactly like 'headline'
                 "company_name": record.company_name if record.company_name else "",
                 "Industry": record.Industry if record.Industry else "",
                 "Products_services": record.Products_services if record.Products_services else "",
@@ -1577,7 +1652,12 @@ def get_audio():
                 "testimonials": record.testimonials if record.testimonials else "",
                 "email_1": record.email_1 if record.email_1 else "",
                 "email_2": record.email_2 if record.email_2 else "",
-                "salesletter": record.salesletter if record.salesletter else ""
+                "salesletter": record.salesletter if record.salesletter else "",
+                # Return the 4 new fields:
+                "user_name": record.user_name if record.user_name else "",
+                "website_url": record.website_url if record.website_url else "",
+                "lead_email": record.lead_email if record.lead_email else "",
+                "offer_url": record.offer_url if record.offer_url else ""
             }), 200
         else:
             return jsonify({
@@ -1602,7 +1682,12 @@ def get_audio():
                 "testimonials": "",
                 "email_1": "",
                 "email_2": "",
-                "salesletter": ""
+                "salesletter": "",
+                # placeholders for the 4 new fields
+                "user_name": "",
+                "website_url": "",
+                "lead_email": "",
+                "offer_url": ""
             }), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
