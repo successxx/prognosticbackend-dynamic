@@ -624,7 +624,7 @@ def create_table_and_index_if_not_exists():
                 logger.info("'offer_url' column added to 'user_audio'.")
             else:
                 logger.info("'offer_url' column already exists in 'user_audio'.")
-
+                
 
 # Call the function to create the tables and indexes if not present
 create_table_and_index_if_not_exists()
@@ -1183,16 +1183,17 @@ def insert_user_one():
 @cross_origin()
 @app.route('/insert_user_two', methods=['POST'])
 def insert_user_two():
+    # This endpoint now behaves exactly like /insert_audio
     data = request.json
 
-    # Instead of the old logic, we now support the full payload (same as /insert_audio)
+    # Instead of using user_email and text fields, we use the full payload fields:
     lead_email = data.get('lead_email')
     audio_link = data.get('audio_link')
     audio_link_two = data.get('audio_link_two', '')
     exit_message = data.get('exit_message', '')
     headline = data.get('headline', '')
 
-    # The existing dynamic fields:
+    # The dynamic fields:
     company_name = data.get('company_name', '')
     Industry = data.get('Industry', '')
     Products_services = data.get('Products_services', '')
@@ -1215,14 +1216,13 @@ def insert_user_two():
     # The 4 new fields:
     user_name = data.get('user_name', '')
     website_url = data.get('website_url', '')
-    # lead_email is already captured above
     offer_url = data.get('offer_url', '')
 
     if not lead_email or not audio_link:
         return jsonify({"error": "Missing lead_email or audio_link"}), 400
 
     try:
-        existing = ResultsTwo.query.filter_by(lead_email=lead_email).first()
+        existing = UserAudio.query.filter_by(lead_email=lead_email).first()
         if existing:
             existing.audio_link = audio_link
             existing.audio_link_two = audio_link_two
@@ -1250,13 +1250,13 @@ def insert_user_two():
 
             existing.user_name = user_name
             existing.website_url = website_url
-            existing.lead_email = lead_email
+            # lead_email remains the same
             existing.offer_url = offer_url
 
             db.session.commit()
             return jsonify({"message": "User two updated successfully"}), 200
         else:
-            new_user = ResultsTwo(
+            new_audio = UserAudio(
                 user_email="",   # We do NOT remove the original user_email field, but it's empty for new records
                 lead_email=lead_email,
                 audio_link=audio_link,
@@ -1283,10 +1283,9 @@ def insert_user_two():
                 salesletter=salesletter,
                 user_name=user_name,
                 website_url=website_url,
-                lead_email=lead_email,
                 offer_url=offer_url
             )
-            db.session.add(new_user)
+            db.session.add(new_audio)
             db.session.commit()
             return jsonify({"message": "User two inserted successfully"}), 201
     except Exception as e:
@@ -1349,7 +1348,7 @@ def get_user_one():
                     "length": len(user.text)  
                 },
                 "user_email": user_email,
-                "elapsed_time": f"{elapsed_time:.4f} seconds",
+                "elapsed_time": f"{time.time() - start_time:.4f} seconds",
             }
             log_custom_message("Get user one operation", extra_data)
             return response
@@ -1368,7 +1367,7 @@ def get_user_one():
                 "response_status": response.status_code,
                 "response_body": response.get_json(),
                 "user_email": user_email,
-                "elapsed_time": f"{elapsed_time:.4f} seconds",
+                "elapsed_time": f"{time.time() - start_time:.4f} seconds",
             }
             log_custom_message("User one not found", extra_data)
             return response
@@ -1466,7 +1465,7 @@ def get_user_two():
                 "response_status": response.status_code,
                 "response_body": response.get_json(),
                 "user_email": user_email,
-                "elapsed_time": f"{elapsed_time:.4f} seconds",
+                "elapsed_time": f"{time.time() - start_time:.4f} seconds",
             }
             log_custom_message("User two not found", extra_data)
             return response
@@ -1540,7 +1539,6 @@ def insert_audio():
     # The 4 new fields:
     user_name = data.get('user_name', '')
     website_url = data.get('website_url', '')
-    lead_email = data.get('lead_email', '')
     offer_url = data.get('offer_url', '')
 
     # Must have lead_email (instead of user_email) and audio_link
