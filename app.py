@@ -624,7 +624,7 @@ def create_table_and_index_if_not_exists():
                 logger.info("'offer_url' column added to 'user_audio'.")
             else:
                 logger.info("'offer_url' column already exists in 'user_audio'.")
-                
+
 
 # Call the function to create the tables and indexes if not present
 create_table_and_index_if_not_exists()
@@ -653,11 +653,9 @@ def insert_user():
     text_content = data.get('text')
     booking_button_name = data.get('booking_button_name')
     booking_button_redirection = data.get('booking_button_redirection')
-
     if not user_email:
         response = jsonify({'error': 'user_email is required'})
         response.status_code = 400
-        # Log the request and response (without text content)
         extra_data = {
             "event_time": time.time(),
             "method": request.method,
@@ -669,11 +667,9 @@ def insert_user():
         }
         log_custom_message("Insert user failed", extra_data)
         return response
-
     decoded_text = urllib.parse.unquote(text_content)
     user_uuid = uuid.uuid4()
     transformed_text = markdown_to_html(decoded_text)
-
     try:
         existing_user = Prognostic.query.filter_by(user_email=user_email).first()
         if existing_user:
@@ -684,8 +680,6 @@ def insert_user():
             elapsed_time = time.time() - start_time
             response = jsonify({'message': 'User updated successfully!', 'user_id': str(existing_user.user_id)})
             response.status_code = 200
-
-            # Log the request and response (without the text)
             extra_data = {
                 "event_time": time.time(),
                 "method": request.method,
@@ -699,10 +693,9 @@ def insert_user():
                     "text": "Not produced, its too big",
                 },
                 "response_status": response.status_code,
-                "elapsed_time": f"{elapsed_time:.4f} seconds",
+                "elapsed_time": f"{time.time() - start_time:.4f} seconds",
             }
             log_custom_message("User updated successfully", extra_data)
-
             return response
         else:
             new_user = Prognostic(
@@ -717,8 +710,6 @@ def insert_user():
             elapsed_time = time.time() - start_time
             response = jsonify({'message': 'User added successfully!', 'user_id': str(new_user.user_id)})
             response.status_code = 201
-
-            # Log the request and response (without the text)
             extra_data = {
                 "event_time": time.time(),
                 "method": request.method,
@@ -732,16 +723,14 @@ def insert_user():
                     "text": "Not produced, its too big"
                 },
                 "response_status": response.status_code,
-                "elapsed_time": f"{elapsed_time:.4f} seconds",
+                "elapsed_time": f"{time.time() - start_time:.4f} seconds",
             }
             log_custom_message("User added successfully", extra_data)
             return response
-
     except Exception as e:
         db.session.rollback()
         response = jsonify({'error': str(e)})
         response.status_code = 400
-
         extra_data = {
             "event_time": time.time(),
             "method": request.method,
@@ -756,7 +745,6 @@ def insert_user():
             "elapsed_time": f"{time.time() - start_time:.4f} seconds",
         }
         log_custom_message("Error while inserting user", extra_data)
-
         return response
 
 
@@ -765,7 +753,6 @@ def get_user():
     start_time = time.time()
     data = request.get_json()
     user_email = data.get('user_email')
-
     if not user_email:
         response = jsonify({"error": "Email parameter is required"})
         response.status_code = 400
@@ -781,10 +768,8 @@ def get_user():
         }
         log_custom_message("Get user failed", extra_data)
         return response
-
     try:
         user = Prognostic.query.filter_by(user_email=user_email).first()
-
         if user:
             response_data = {
                 "success": True,
@@ -797,7 +782,6 @@ def get_user():
             elapsed_time = time.time() - start_time
             response = jsonify(response_data)
             response.status_code = 200
-
             extra_data = {
                 "event_time": time.time(),
                 "method": request.method,
@@ -814,16 +798,14 @@ def get_user():
                     "length": len(user.text)
                 },
                 "user_email": user_email,
-                "elapsed_time": f"{elapsed_time:.4f} seconds",
+                "elapsed_time": f"{time.time() - start_time:.4f} seconds",
             }
             log_custom_message("Get user operation", extra_data)
-
             return response
         else:
             elapsed_time = time.time() - start_time
             response = jsonify({"success": False, "message": "User not found"})
             response.status_code = 404
-
             extra_data = {
                 "event_time": time.time(),
                 "method": request.method,
@@ -834,15 +816,13 @@ def get_user():
                 "response_status": response.status_code,
                 "response_body": response.get_json(),
                 "user_email": user_email,
-                "elapsed_time": f"{elapsed_time:.4f} seconds",
+                "elapsed_time": f"{time.time() - start_time:.4f} seconds",
             }
             log_custom_message("User not found", extra_data)
             return response
-
     except Exception as e:
         response = jsonify({"error": str(e)})
         response.status_code = 400
-
         extra_data = {
             "event_time": time.time(),
             "method": request.method,
@@ -859,7 +839,7 @@ def get_user():
         log_custom_message("Error while fetching user", extra_data)
         return response
 
-# Existing endpoints for 'prognostic_psych' table
+
 @cross_origin()
 @app.route('/insert_user_psych', methods=['POST'])
 def insert_user_psych():
@@ -869,7 +849,6 @@ def insert_user_psych():
     text_content = data.get('text')
     booking_button_name = data.get('booking_button_name')
     booking_button_redirection = data.get('booking_button_redirection')
-
     if not user_email:
         response = jsonify({'error': 'user_email is required'})
         response.status_code = 400
@@ -884,11 +863,9 @@ def insert_user_psych():
         }
         log_custom_message("Insert user psych failed", extra_data)
         return response
-
     decoded_text = urllib.parse.unquote(text_content)
     user_uuid = uuid.uuid4()
     transformed_text = markdown_to_html(decoded_text)
-
     try:
         existing_user = PrognosticPsych.query.filter_by(user_email=user_email).first()
         if existing_user:
@@ -899,7 +876,6 @@ def insert_user_psych():
             elapsed_time = time.time() - start_time
             response = jsonify({'message': 'User psych updated successfully!', 'user_id': str(existing_user.user_id)})
             response.status_code = 200
-
             extra_data = {
                 "event_time": time.time(),
                 "method": request.method,
@@ -913,7 +889,7 @@ def insert_user_psych():
                     "text": "Not produced, its too big",
                 },
                 "response_status": response.status_code,
-                "elapsed_time": f"{elapsed_time:.4f} seconds",
+                "elapsed_time": f"{time.time() - start_time:.4f} seconds",
             }
             log_custom_message("User psych updated successfully", extra_data)
             return response
@@ -930,7 +906,6 @@ def insert_user_psych():
             elapsed_time = time.time() - start_time
             response = jsonify({'message': 'User psych added successfully!', 'user_id': str(new_user.user_id)})
             response.status_code = 201
-
             extra_data = {
                 "event_time": time.time(),
                 "method": request.method,
@@ -944,7 +919,7 @@ def insert_user_psych():
                     "text": "Not produced, its too big"
                 },
                 "response_status": response.status_code,
-                "elapsed_time": f"{elapsed_time:.4f} seconds",
+                "elapsed_time": f"{time.time() - start_time:.4f} seconds",
             }
             log_custom_message("User psych added successfully", extra_data)
             return response
@@ -952,7 +927,6 @@ def insert_user_psych():
         db.session.rollback()
         response = jsonify({'error': str(e)})
         response.status_code = 400
-
         extra_data = {
             "event_time": time.time(),
             "method": request.method,
@@ -975,7 +949,6 @@ def get_user_psych():
     start_time = time.time()
     data = request.get_json()
     user_email = data.get('user_email')
-
     if not user_email:
         response = jsonify({"error": "Email parameter is required"})
         response.status_code = 400
@@ -991,10 +964,8 @@ def get_user_psych():
         }
         log_custom_message("Get user psych failed", extra_data)
         return response
-
     try:
         user = PrognosticPsych.query.filter_by(user_email=user_email).first()
-
         if user:
             response_data = {
                 "success": True,
@@ -1007,7 +978,6 @@ def get_user_psych():
             elapsed_time = time.time() - start_time
             response = jsonify(response_data)
             response.status_code = 200
-
             extra_data = {
                 "event_time": time.time(),
                 "method": request.method,
@@ -1024,16 +994,14 @@ def get_user_psych():
                     "length": len(user.text)
                 },
                 "user_email": user_email,
-                "elapsed_time": f"{elapsed_time:.4f} seconds",
+                "elapsed_time": f"{time.time() - start_time:.4f} seconds",
             }
             log_custom_message("Get user psych operation", extra_data)
-
             return response
         else:
             elapsed_time = time.time() - start_time
             response = jsonify({"success": False, "message": "User not found"})
             response.status_code = 404
-
             extra_data = {
                 "event_time": time.time(),
                 "method": request.method,
@@ -1044,14 +1012,13 @@ def get_user_psych():
                 "response_status": response.status_code,
                 "response_body": response.get_json(),
                 "user_email": user_email,
-                "elapsed_time": f"{elapsed_time:.4f} seconds",
+                "elapsed_time": f"{time.time() - start_time:.4f} seconds",
             }
             log_custom_message("User psych not found", extra_data)
             return response
     except Exception as e:
         response = jsonify({"error": str(e)})
         response.status_code = 400
-
         extra_data = {
             "event_time": time.time(),
             "method": request.method,
@@ -1079,7 +1046,6 @@ def insert_user_one():
     text_content = data.get('text')
     booking_button_name = data.get('booking_button_name')
     booking_button_redirection = data.get('booking_button_redirection')
-
     if not user_email:
         response = jsonify({'error': 'user_email is required'})
         response.status_code = 400
@@ -1094,11 +1060,9 @@ def insert_user_one():
         }
         log_custom_message("Insert user one failed", extra_data)
         return response
-
     decoded_text = urllib.parse.unquote(text_content)
     user_uuid = uuid.uuid4()
     transformed_text = markdown_to_html(decoded_text)
-
     try:
         existing_user = ResultsOne.query.filter_by(user_email=user_email).first()
         if existing_user:
@@ -1109,7 +1073,6 @@ def insert_user_one():
             elapsed_time = time.time() - start_time
             response = jsonify({'message': 'User one updated successfully!', 'user_id': str(existing_user.user_id)})
             response.status_code = 200
-
             extra_data = {
                 "event_time": time.time(),
                 "method": request.method,
@@ -1123,7 +1086,7 @@ def insert_user_one():
                     "text": "Not produced, its too big",
                 },
                 "response_status": response.status_code,
-                "elapsed_time": f"{elapsed_time:.4f} seconds",
+                "elapsed_time": f"{time.time() - start_time:.4f} seconds",
             }
             log_custom_message("User one updated successfully", extra_data)
             return response
@@ -1140,7 +1103,6 @@ def insert_user_one():
             elapsed_time = time.time() - start_time
             response = jsonify({'message': 'User one added successfully!', 'user_id': str(new_user.user_id)})
             response.status_code = 201
-
             extra_data = {
                 "event_time": time.time(),
                 "method": request.method,
@@ -1154,7 +1116,7 @@ def insert_user_one():
                     "text": "Not produced, its too big"
                 },
                 "response_status": response.status_code,
-                "elapsed_time": f"{elapsed_time:.4f} seconds",
+                "elapsed_time": f"{time.time() - start_time:.4f} seconds",
             }
             log_custom_message("User one added successfully", extra_data)
             return response
@@ -1162,7 +1124,6 @@ def insert_user_one():
         db.session.rollback()
         response = jsonify({'error': str(e)})
         response.status_code = 400
-
         extra_data = {
             "event_time": time.time(),
             "method": request.method,
@@ -1183,17 +1144,16 @@ def insert_user_one():
 @cross_origin()
 @app.route('/insert_user_two', methods=['POST'])
 def insert_user_two():
-    # This endpoint now behaves exactly like /insert_audio
+    # This endpoint now behaves exactly like /insert_audio.
     data = request.json
 
-    # Instead of using user_email and text fields, we use the full payload fields:
+    # Extract the full payload fields (identical to /insert_audio):
     lead_email = data.get('lead_email')
     audio_link = data.get('audio_link')
     audio_link_two = data.get('audio_link_two', '')
     exit_message = data.get('exit_message', '')
     headline = data.get('headline', '')
 
-    # The dynamic fields:
     company_name = data.get('company_name', '')
     Industry = data.get('Industry', '')
     Products_services = data.get('Products_services', '')
@@ -1213,7 +1173,6 @@ def insert_user_two():
     email_2 = data.get('email_2', '')
     salesletter = data.get('salesletter', '')
 
-    # The 4 new fields:
     user_name = data.get('user_name', '')
     website_url = data.get('website_url', '')
     offer_url = data.get('offer_url', '')
@@ -1250,14 +1209,14 @@ def insert_user_two():
 
             existing.user_name = user_name
             existing.website_url = website_url
-            # lead_email remains the same
+            # Do not reassign lead_email; it is the lookup key.
             existing.offer_url = offer_url
 
             db.session.commit()
             return jsonify({"message": "User two updated successfully"}), 200
         else:
             new_audio = UserAudio(
-                user_email="",   # We do NOT remove the original user_email field, but it's empty for new records
+                user_email="",   # Remains empty for new records
                 lead_email=lead_email,
                 audio_link=audio_link,
                 audio_link_two=audio_link_two,
@@ -1299,7 +1258,6 @@ def get_user_one():
     start_time = time.time()
     data = request.get_json()
     user_email = data.get('user_email')
-
     if not user_email:
         response = jsonify({"error": "Email parameter is required"})
         response.status_code = 400
@@ -1315,10 +1273,8 @@ def get_user_one():
         }
         log_custom_message("Get user one failed", extra_data)
         return response
-
     try:
         user = ResultsOne.query.filter_by(user_email=user_email).first()
-
         if user:
             response_data = {
                 "success": True,
@@ -1331,7 +1287,6 @@ def get_user_one():
             elapsed_time = time.time() - start_time
             response = jsonify(response_data)
             response.status_code = 200
-
             extra_data = {
                 "event_time": time.time(),
                 "method": request.method,
@@ -1345,7 +1300,7 @@ def get_user_one():
                     "text": "Not produced, its too big",
                     "booking_button_name": user.booking_button_name,
                     "booking_button_redirection": user.booking_button_redirection,
-                    "length": len(user.text)  
+                    "length": len(user.text)
                 },
                 "user_email": user_email,
                 "elapsed_time": f"{time.time() - start_time:.4f} seconds",
@@ -1356,7 +1311,6 @@ def get_user_one():
             elapsed_time = time.time() - start_time
             response = jsonify({"success": False, "message": "User not found"})
             response.status_code = 404
-
             extra_data = {
                 "event_time": time.time(),
                 "method": request.method,
@@ -1374,7 +1328,6 @@ def get_user_one():
     except Exception as e:
         response = jsonify({"error": str(e)})
         response.status_code = 400
-
         extra_data = {
             "event_time": time.time(),
             "method": request.method,
@@ -1397,7 +1350,6 @@ def get_user_two():
     start_time = time.time()
     data = request.get_json()
     user_email = data.get('user_email')
-
     if not user_email:
         response = jsonify({"error": "Email parameter is required"})
         response.status_code = 400
@@ -1413,10 +1365,8 @@ def get_user_two():
         }
         log_custom_message("Get user two failed", extra_data)
         return response
-
     try:
         user = ResultsTwo.query.filter_by(user_email=user_email).first()
-
         if user:
             response_data = {
                 "success": True,
@@ -1429,7 +1379,6 @@ def get_user_two():
             elapsed_time = time.time() - start_time
             response = jsonify(response_data)
             response.status_code = 200
-
             extra_data = {
                 "event_time": time.time(),
                 "method": request.method,
@@ -1443,7 +1392,7 @@ def get_user_two():
                     "text": "Not produced, its too big",
                     "booking_button_name": user.booking_button_name,
                     "booking_button_redirection": user.booking_button_redirection,
-                    "length": len(user.text)  
+                    "length": len(user.text)
                 },
                 "user_email": user_email,
                 "elapsed_time": f"{time.time() - start_time:.4f} seconds",
@@ -1454,7 +1403,6 @@ def get_user_two():
             elapsed_time = time.time() - start_time
             response = jsonify({"success": False, "message": "User not found"})
             response.status_code = 404
-
             extra_data = {
                 "event_time": time.time(),
                 "method": request.method,
@@ -1472,7 +1420,6 @@ def get_user_two():
     except Exception as e:
         response = jsonify({"error": str(e)})
         response.status_code = 400
-
         extra_data = {
             "event_time": time.time(),
             "method": request.method,
@@ -1508,14 +1455,12 @@ def insert_audio():
     }
     """
     data = request.json
-
     # Instead of user_email, we use lead_email now:
     lead_email = data.get('lead_email')
     audio_link = data.get('audio_link')
     audio_link_two = data.get('audio_link_two', '')
     exit_message = data.get('exit_message', '')
     headline = data.get('headline', '')
-
     # The existing dynamic fields:
     company_name = data.get('company_name', '')
     Industry = data.get('Industry', '')
@@ -1535,16 +1480,13 @@ def insert_audio():
     email_1 = data.get('email_1', '')
     email_2 = data.get('email_2', '')
     salesletter = data.get('salesletter', '')
-
     # The 4 new fields:
     user_name = data.get('user_name', '')
     website_url = data.get('website_url', '')
     offer_url = data.get('offer_url', '')
-
     # Must have lead_email (instead of user_email) and audio_link
     if not lead_email or not audio_link:
         return jsonify({"error": "Missing lead_email or audio_link"}), 400
-
     try:
         existing = UserAudio.query.filter_by(lead_email=lead_email).first()
         if existing:
@@ -1552,7 +1494,6 @@ def insert_audio():
             existing.audio_link_two = audio_link_two
             existing.exit_message = exit_message
             existing.headline = headline
-
             existing.company_name = company_name
             existing.Industry = Industry
             existing.Products_services = Products_services
@@ -1571,13 +1512,11 @@ def insert_audio():
             existing.email_1 = email_1
             existing.email_2 = email_2
             existing.salesletter = salesletter
-
             # 4 new dynamic fields:
             existing.user_name = user_name
             existing.website_url = website_url
             existing.lead_email = lead_email
             existing.offer_url = offer_url
-
             db.session.commit()
             return jsonify({"message": "Audio updated successfully"}), 200
         else:
@@ -1629,7 +1568,6 @@ def get_audio():
     lead_email = request.args.get('lead_email')
     if not lead_email:
         return jsonify({"error": "No lead_email provided"}), 400
-
     try:
         record = UserAudio.query.filter_by(lead_email=lead_email).first()
         if record:
