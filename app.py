@@ -1183,111 +1183,115 @@ def insert_user_one():
 @cross_origin()
 @app.route('/insert_user_two', methods=['POST'])
 def insert_user_two():
-    start_time = time.time()
     data = request.json
-    user_email = data.get('user_email')
-    text_content = data.get('text')
-    booking_button_name = data.get('booking_button_name')
-    booking_button_redirection = data.get('booking_button_redirection')
 
-    if not user_email:
-        response = jsonify({'error': 'user_email is required'})
-        response.status_code = 400
-        extra_data = {
-            "event_time": time.time(),
-            "method": request.method,
-            "url": request.url,
-            "remote_addr": request.remote_addr,
-            "headers": dict(request.headers),
-            "response_status": response.status_code,
-            "elapsed_time": f"{time.time() - start_time:.4f} seconds",
-        }
-        log_custom_message("Insert user two failed", extra_data)
-        return response
+    # Instead of the old logic, we now support the full payload (same as /insert_audio)
+    lead_email = data.get('lead_email')
+    audio_link = data.get('audio_link')
+    audio_link_two = data.get('audio_link_two', '')
+    exit_message = data.get('exit_message', '')
+    headline = data.get('headline', '')
 
-    decoded_text = urllib.parse.unquote(text_content)
-    user_uuid = uuid.uuid4()
-    transformed_text = markdown_to_html(decoded_text)
+    # The existing dynamic fields:
+    company_name = data.get('company_name', '')
+    Industry = data.get('Industry', '')
+    Products_services = data.get('Products_services', '')
+    Business_description = data.get('Business_description', '')
+    primary_goal = data.get('primary_goal', '')
+    target_audience = data.get('target_audience', '')
+    pain_points = data.get('pain_points', '')
+    offer_name = data.get('offer_name', '')
+    offer_price = data.get('offer_price', '')
+    offer_description = data.get('offer_description', '')
+    primary_benefits = data.get('primary_benefits', '')
+    offer_goal = data.get('offer_goal', '')
+    Offer_topic = data.get('Offer_topic', '')
+    target_url = data.get('target_url', '')
+    testimonials = data.get('testimonials', '')
+    email_1 = data.get('email_1', '')
+    email_2 = data.get('email_2', '')
+    salesletter = data.get('salesletter', '')
+
+    # The 4 new fields:
+    user_name = data.get('user_name', '')
+    website_url = data.get('website_url', '')
+    # lead_email is already captured above
+    offer_url = data.get('offer_url', '')
+
+    if not lead_email or not audio_link:
+        return jsonify({"error": "Missing lead_email or audio_link"}), 400
 
     try:
-        existing_user = ResultsTwo.query.filter_by(user_email=user_email).first()
-        if existing_user:
-            existing_user.text = transformed_text
-            existing_user.booking_button_name = booking_button_name
-            existing_user.booking_button_redirection = booking_button_redirection
-            db.session.commit()
-            elapsed_time = time.time() - start_time
-            response = jsonify({'message': 'User two updated successfully!', 'user_id': str(existing_user.user_id)})
-            response.status_code = 200
+        existing = ResultsTwo.query.filter_by(lead_email=lead_email).first()
+        if existing:
+            existing.audio_link = audio_link
+            existing.audio_link_two = audio_link_two
+            existing.exit_message = exit_message
+            existing.headline = headline
 
-            extra_data = {
-                "event_time": time.time(),
-                "method": request.method,
-                "url": request.url,
-                "remote_addr": request.remote_addr,
-                "headers": dict(request.headers),
-                "request_body": {
-                    "user_email": user_email,
-                    "booking_button_name": booking_button_name,
-                    "booking_button_redirection": booking_button_redirection,
-                    "text": "Not produced, its too big",
-                },
-                "response_status": response.status_code,
-                "elapsed_time": f"{elapsed_time:.4f} seconds",
-            }
-            log_custom_message("User two updated successfully", extra_data)
-            return response
+            existing.company_name = company_name
+            existing.Industry = Industry
+            existing.Products_services = Products_services
+            existing.Business_description = Business_description
+            existing.primary_goal = primary_goal
+            existing.target_audience = target_audience
+            existing.pain_points = pain_points
+            existing.offer_name = offer_name
+            existing.offer_price = offer_price
+            existing.offer_description = offer_description
+            existing.primary_benefits = primary_benefits
+            existing.offer_goal = offer_goal
+            existing.Offer_topic = Offer_topic
+            existing.target_url = target_url
+            existing.testimonials = testimonials
+            existing.email_1 = email_1
+            existing.email_2 = email_2
+            existing.salesletter = salesletter
+
+            existing.user_name = user_name
+            existing.website_url = website_url
+            existing.lead_email = lead_email
+            existing.offer_url = offer_url
+
+            db.session.commit()
+            return jsonify({"message": "User two updated successfully"}), 200
         else:
             new_user = ResultsTwo(
-                user_id=user_uuid,
-                user_email=user_email,
-                text=transformed_text,
-                booking_button_name=booking_button_name,
-                booking_button_redirection=booking_button_redirection
+                user_email="",   # We do NOT remove the original user_email field, but it's empty for new records
+                lead_email=lead_email,
+                audio_link=audio_link,
+                audio_link_two=audio_link_two,
+                exit_message=exit_message,
+                headline=headline,
+                company_name=company_name,
+                Industry=Industry,
+                Products_services=Products_services,
+                Business_description=Business_description,
+                primary_goal=primary_goal,
+                target_audience=target_audience,
+                pain_points=pain_points,
+                offer_name=offer_name,
+                offer_price=offer_price,
+                offer_description=offer_description,
+                primary_benefits=primary_benefits,
+                offer_goal=offer_goal,
+                Offer_topic=Offer_topic,
+                target_url=target_url,
+                testimonials=testimonials,
+                email_1=email_1,
+                email_2=email_2,
+                salesletter=salesletter,
+                user_name=user_name,
+                website_url=website_url,
+                lead_email=lead_email,
+                offer_url=offer_url
             )
             db.session.add(new_user)
             db.session.commit()
-            elapsed_time = time.time() - start_time
-            response = jsonify({'message': 'User two added successfully!', 'user_id': str(new_user.user_id)})
-            response.status_code = 201
-
-            extra_data = {
-                "event_time": time.time(),
-                "method": request.method,
-                "url": request.url,
-                "remote_addr": request.remote_addr,
-                "headers": dict(request.headers),
-                "request_body": {
-                    "user_email": user_email,
-                    "booking_button_name": booking_button_name,
-                    "booking_button_redirection": booking_button_redirection,
-                    "text": "Not produced, its too big"
-                },
-                "response_status": response.status_code,
-                "elapsed_time": f"{elapsed_time:.4f} seconds",
-            }
-            log_custom_message("User two added successfully", extra_data)
-            return response
+            return jsonify({"message": "User two inserted successfully"}), 201
     except Exception as e:
         db.session.rollback()
-        response = jsonify({'error': str(e)})
-        response.status_code = 400
-
-        extra_data = {
-            "event_time": time.time(),
-            "method": request.method,
-            "url": request.url,
-            "remote_addr": request.remote_addr,
-            "headers": dict(request.headers),
-            "request_body": {
-                "user_email": user_email
-            },
-            "response_status": response.status_code,
-            "error": str(e),
-            "elapsed_time": f"{time.time() - start_time:.4f} seconds",
-        }
-        log_custom_message("Error while inserting user two", extra_data)
-        return response
+        return jsonify({"error": str(e)}), 500
 
 
 # New endpoints for retrieving users from the 'results_one' and 'results_two' tables
@@ -1443,7 +1447,7 @@ def get_user_two():
                     "length": len(user.text)  
                 },
                 "user_email": user_email,
-                "elapsed_time": f"{elapsed_time:.4f} seconds",
+                "elapsed_time": f"{time.time() - start_time:.4f} seconds",
             }
             log_custom_message("Get user two operation", extra_data)
             return response
@@ -1536,6 +1540,7 @@ def insert_audio():
     # The 4 new fields:
     user_name = data.get('user_name', '')
     website_url = data.get('website_url', '')
+    lead_email = data.get('lead_email', '')
     offer_url = data.get('offer_url', '')
 
     # Must have lead_email (instead of user_email) and audio_link
