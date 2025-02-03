@@ -17,7 +17,6 @@ from sqlalchemy.dialects.postgresql import UUID
 # Set up logging with JSON formatter
 logHandler = logging.StreamHandler()
 formatter = jsonlogger.JsonFormatter('%(asctime)s %(name)s %(levelname)s %(message)s')
-
 logHandler.setFormatter(formatter)
 logger = logging.getLogger(__name__)
 logger.addHandler(logHandler)
@@ -171,7 +170,6 @@ def create_table_and_index_if_not_exists():
                     SELECT 1 FROM information_schema.columns 
                     WHERE table_name = '{table_name}' AND column_name = 'created_at';
                 """)).fetchone()
-
                 if not created_at_exists:
                     connection.execute(text(f"""
                         ALTER TABLE {table_name} 
@@ -187,7 +185,6 @@ def create_table_and_index_if_not_exists():
                     SELECT 1 FROM information_schema.columns 
                     WHERE table_name = '{table_name}' AND column_name = 'booking_button_name';
                 """)).fetchone()
-
                 if not booking_button_name_exists:
                     connection.execute(text(f"""
                         ALTER TABLE {table_name} 
@@ -203,7 +200,6 @@ def create_table_and_index_if_not_exists():
                     SELECT 1 FROM information_schema.columns 
                     WHERE table_name = '{table_name}' AND column_name = 'booking_button_redirection';
                 """)).fetchone()
-
                 if not booking_button_redirection_exists:
                     connection.execute(text(f"""
                         ALTER TABLE {table_name} 
@@ -220,7 +216,6 @@ def create_table_and_index_if_not_exists():
                     SELECT indexname FROM pg_indexes 
                     WHERE tablename = '{table_name}' AND indexname = '{index_name}';
                 """)).fetchone()
-
                 if not index_exists:
                     create_index_query = text(f"""
                         CREATE INDEX {index_name} ON {table_name} (user_email);
@@ -239,7 +234,6 @@ def create_table_and_index_if_not_exists():
                 SELECT 1 FROM information_schema.columns
                 WHERE table_name = 'user_audio' AND column_name = 'audio_link_two';
             """)).fetchone()
-
             if not audio_link_two_exists:
                 connection.execute(text("""
                     ALTER TABLE user_audio
@@ -255,7 +249,6 @@ def create_table_and_index_if_not_exists():
                 SELECT 1 FROM information_schema.columns
                 WHERE table_name = 'user_audio' AND column_name = 'exit_message';
             """)).fetchone()
-
             if not exit_msg_exists:
                 connection.execute(text("""
                     ALTER TABLE user_audio
@@ -271,7 +264,6 @@ def create_table_and_index_if_not_exists():
                 SELECT 1 FROM information_schema.columns
                 WHERE table_name = 'user_audio' AND column_name = 'headline';
             """)).fetchone()
-
             if not headline_exists:
                 connection.execute(text("""
                     ALTER TABLE user_audio
@@ -287,7 +279,6 @@ def create_table_and_index_if_not_exists():
                 SELECT 1 FROM information_schema.columns
                 WHERE table_name = 'user_audio' AND column_name = 'company_name';
             """)).fetchone()
-
             if not company_name_exists:
                 connection.execute(text("""
                     ALTER TABLE user_audio
@@ -303,7 +294,6 @@ def create_table_and_index_if_not_exists():
                 SELECT 1 FROM information_schema.columns
                 WHERE table_name = 'user_audio' AND column_name = 'Industry';
             """)).fetchone()
-
             if not Industry_exists:
                 connection.execute(text("""
                     ALTER TABLE user_audio
@@ -319,7 +309,6 @@ def create_table_and_index_if_not_exists():
                 SELECT 1 FROM information_schema.columns
                 WHERE table_name = 'user_audio' AND column_name = 'Products_services';
             """)).fetchone()
-
             if not Products_services_exists:
                 connection.execute(text("""
                     ALTER TABLE user_audio
@@ -335,7 +324,6 @@ def create_table_and_index_if_not_exists():
                 SELECT 1 FROM information_schema.columns
                 WHERE table_name = 'user_audio' AND column_name = 'Business_description';
             """)).fetchone()
-
             if not Business_description_exists:
                 connection.execute(text("""
                     ALTER TABLE user_audio
@@ -351,7 +339,6 @@ def create_table_and_index_if_not_exists():
                 SELECT 1 FROM information_schema.columns
                 WHERE table_name = 'user_audio' AND column_name = 'primary_goal';
             """)).fetchone()
-
             if not primary_goal_exists:
                 connection.execute(text("""
                     ALTER TABLE user_audio
@@ -367,7 +354,6 @@ def create_table_and_index_if_not_exists():
                 SELECT 1 FROM information_schema.columns
                 WHERE table_name = 'user_audio' AND column_name = 'target_audience';
             """)).fetchone()
-
             if not target_audience_exists:
                 connection.execute(text("""
                     ALTER TABLE user_audio
@@ -383,7 +369,6 @@ def create_table_and_index_if_not_exists():
                 SELECT 1 FROM information_schema.columns
                 WHERE table_name = 'user_audio' AND column_name = 'pain_points';
             """)).fetchone()
-
             if not pain_points_exists:
                 connection.execute(text("""
                     ALTER TABLE user_audio
@@ -399,7 +384,6 @@ def create_table_and_index_if_not_exists():
                 SELECT 1 FROM information_schema.columns
                 WHERE table_name = 'user_audio' AND column_name = 'offer_name';
             """)).fetchone()
-
             if not offer_name_exists:
                 connection.execute(text("""
                     ALTER TABLE user_audio
@@ -415,7 +399,6 @@ def create_table_and_index_if_not_exists():
                 SELECT 1 FROM information_schema.columns
                 WHERE table_name = 'user_audio' AND column_name = 'offer_price';
             """)).fetchone()
-
             if not offer_price_exists:
                 connection.execute(text("""
                     ALTER TABLE user_audio
@@ -431,7 +414,6 @@ def create_table_and_index_if_not_exists():
                 SELECT 1 FROM information_schema.columns
                 WHERE table_name = 'user_audio' AND column_name = 'offer_description';
             """)).fetchone()
-
             if not offer_description_exists:
                 connection.execute(text("""
                     ALTER TABLE user_audio
@@ -447,7 +429,6 @@ def create_table_and_index_if_not_exists():
                 SELECT 1 FROM information_schema.columns
                 WHERE table_name = 'user_audio' AND column_name = 'primary_benefits';
             """)).fetchone()
-
             if not primary_benefits_exists:
                 connection.execute(text("""
                     ALTER TABLE user_audio
@@ -463,7 +444,6 @@ def create_table_and_index_if_not_exists():
                 SELECT 1 FROM information_schema.columns
                 WHERE table_name = 'user_audio' AND column_name = 'offer_goal';
             """)).fetchone()
-
             if not offer_goal_exists:
                 connection.execute(text("""
                     ALTER TABLE user_audio
@@ -479,7 +459,6 @@ def create_table_and_index_if_not_exists():
                 SELECT 1 FROM information_schema.columns
                 WHERE table_name = 'user_audio' AND column_name = 'Offer_topic';
             """)).fetchone()
-
             if not Offer_topic_exists:
                 connection.execute(text("""
                     ALTER TABLE user_audio
@@ -495,7 +474,6 @@ def create_table_and_index_if_not_exists():
                 SELECT 1 FROM information_schema.columns
                 WHERE table_name = 'user_audio' AND column_name = 'target_url';
             """)).fetchone()
-
             if not target_url_exists:
                 connection.execute(text("""
                     ALTER TABLE user_audio
@@ -511,7 +489,6 @@ def create_table_and_index_if_not_exists():
                 SELECT 1 FROM information_schema.columns
                 WHERE table_name = 'user_audio' AND column_name = 'testimonials';
             """)).fetchone()
-
             if not testimonials_exists:
                 connection.execute(text("""
                     ALTER TABLE user_audio
@@ -527,7 +504,6 @@ def create_table_and_index_if_not_exists():
                 SELECT 1 FROM information_schema.columns
                 WHERE table_name = 'user_audio' AND column_name = 'email_1';
             """)).fetchone()
-
             if not email_1_exists:
                 connection.execute(text("""
                     ALTER TABLE user_audio
@@ -542,7 +518,6 @@ def create_table_and_index_if_not_exists():
                 SELECT 1 FROM information_schema.columns
                 WHERE table_name = 'user_audio' AND column_name = 'email_2';
             """)).fetchone()
-
             if not email_2_exists:
                 connection.execute(text("""
                     ALTER TABLE user_audio
@@ -557,7 +532,6 @@ def create_table_and_index_if_not_exists():
                 SELECT 1 FROM information_schema.columns
                 WHERE table_name = 'user_audio' AND column_name = 'salesletter';
             """)).fetchone()
-
             if not salesletter_exists:
                 connection.execute(text("""
                     ALTER TABLE user_audio
@@ -727,6 +701,7 @@ def insert_user():
             }
             log_custom_message("User added successfully", extra_data)
             return response
+
     except Exception as e:
         db.session.rollback()
         response = jsonify({'error': str(e)})
@@ -933,9 +908,7 @@ def insert_user_psych():
             "url": request.url,
             "remote_addr": request.remote_addr,
             "headers": dict(request.headers),
-            "request_body": {
-                "user_email": user_email
-            },
+            "request_body": {"user_email": user_email},
             "response_status": response.status_code,
             "error": str(e),
             "elapsed_time": f"{time.time() - start_time:.4f} seconds",
@@ -1130,9 +1103,7 @@ def insert_user_one():
             "url": request.url,
             "remote_addr": request.remote_addr,
             "headers": dict(request.headers),
-            "request_body": {
-                "user_email": user_email
-            },
+            "request_body": {"user_email": user_email},
             "response_status": response.status_code,
             "error": str(e),
             "elapsed_time": f"{time.time() - start_time:.4f} seconds",
@@ -1209,14 +1180,14 @@ def insert_user_two():
 
             existing.user_name = user_name
             existing.website_url = website_url
-            # Do not reassign lead_email; it is the lookup key.
+            # Do not reassign lead_email; it remains as the lookup key.
             existing.offer_url = offer_url
 
             db.session.commit()
             return jsonify({"message": "User two updated successfully"}), 200
         else:
             new_audio = UserAudio(
-                user_email="",   # Remains empty for new records
+                user_email=lead_email,   # Changed here: assign user_email = lead_email instead of ""
                 lead_email=lead_email,
                 audio_link=audio_link,
                 audio_link_two=audio_link_two,
@@ -1252,7 +1223,6 @@ def insert_user_two():
         return jsonify({"error": str(e)}), 500
 
 
-# New endpoints for retrieving users from the 'results_one' and 'results_two' tables
 @app.route('/get_user_one', methods=['POST'])
 def get_user_one():
     start_time = time.time()
@@ -1437,9 +1407,6 @@ def get_user_two():
         return response
 
 
-##########################
-# AUDIO ENDPOINTS
-##########################
 @cross_origin()
 @app.route('/insert_audio', methods=['POST'])
 def insert_audio():
@@ -1494,6 +1461,7 @@ def insert_audio():
             existing.audio_link_two = audio_link_two
             existing.exit_message = exit_message
             existing.headline = headline
+
             existing.company_name = company_name
             existing.Industry = Industry
             existing.Products_services = Products_services
@@ -1512,16 +1480,18 @@ def insert_audio():
             existing.email_1 = email_1
             existing.email_2 = email_2
             existing.salesletter = salesletter
+
             # 4 new dynamic fields:
             existing.user_name = user_name
             existing.website_url = website_url
             existing.lead_email = lead_email
             existing.offer_url = offer_url
+
             db.session.commit()
             return jsonify({"message": "Audio updated successfully"}), 200
         else:
             new_audio = UserAudio(
-                user_email="",   # We do NOT remove the original user_email field, but it's empty for new records
+                user_email="",
                 lead_email=lead_email,
                 audio_link=audio_link,
                 audio_link_two=audio_link_two,
