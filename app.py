@@ -1740,14 +1740,15 @@ def insert_audio():
 @app.route('/get_audio', methods=['GET'])
 def get_audio():
     """
-    GET /get_audio?lead_email=someone@example.com
+    GET /get_audio?user_email=someone@example.com
     """
-    lead_email = request.args.get('lead_email')
-    if not lead_email:
-        return jsonify({"error": "No lead_email provided"}), 400
+    user_email = request.args.get('user_email')
+    if not user_email:
+        return jsonify({"error": "No user_email provided"}), 400
 
     try:
-        record = UserAudio.query.filter_by(lead_email=lead_email).first()
+        # Now query by user_email instead of lead_email
+        record = UserAudio.query.filter_by(user_email=user_email).first()
         if record:
             return jsonify({
                 "audio_link": record.audio_link,
@@ -1778,6 +1779,7 @@ def get_audio():
                 "offer_url": record.offer_url or ""
             }), 200
         else:
+            # Return empty object if not found
             return jsonify({
                 "audio_link": None,
                 "audio_link_two": None,
