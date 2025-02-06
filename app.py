@@ -33,6 +33,7 @@ dyno = os.getenv('DYNO', 'unknown-dyno')
 
 database_url = os.environ.get('DATABASE_URL')
 if database_url:
+    # Heroku sometimes gives "postgres://", which needs replacing with "postgresql+pg8000://"
     app.config['SQLALCHEMY_DATABASE_URI'] = database_url.replace("postgres://", "postgresql+pg8000://")
 else:
     app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql+pg8000://postgres:postgres@localhost/prognostic'
@@ -53,7 +54,6 @@ class Prognostic(db.Model):
     booking_button_redirection = db.Column(db.Text, nullable=True)  # Can be NULL
 
 
-# Existing model class for the 'prognostic_psych' table
 class PrognosticPsych(db.Model):
     __tablename__ = 'prognostic_psych'
     user_id = db.Column(UUID(as_uuid=True), primary_key=True, unique=True, nullable=False, default=uuid.uuid4)
@@ -64,7 +64,6 @@ class PrognosticPsych(db.Model):
     booking_button_redirection = db.Column(db.Text, nullable=True)  # Can be NULL
 
 
-# New model classes for results_one and results_two tables
 class ResultsOne(db.Model):
     __tablename__ = 'results_one'
     user_id = db.Column(UUID(as_uuid=True), primary_key=True, unique=True, nullable=False, default=uuid.uuid4)
@@ -75,14 +74,46 @@ class ResultsOne(db.Model):
     booking_button_redirection = db.Column(db.Text, nullable=True)  # Can be NULL
 
 
+# ------------------------------------------------------------------
+# Here is the ResultsTwo model with the added columns
+# to match the fields you set in /insert_user_two
+# ------------------------------------------------------------------
 class ResultsTwo(db.Model):
     __tablename__ = 'results_two'
     user_id = db.Column(UUID(as_uuid=True), primary_key=True, unique=True, nullable=False, default=uuid.uuid4)
     user_email = db.Column(db.String, unique=True, nullable=False)
     text = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)  # Auto-generated on insert
-    booking_button_name = db.Column(db.Text, nullable=True)  # Can be NULL
-    booking_button_redirection = db.Column(db.Text, nullable=True)  # Can be NULL
+    booking_button_name = db.Column(db.Text, nullable=True)
+    booking_button_redirection = db.Column(db.Text, nullable=True)
+
+    # Replicating user_audio fields to avoid 500s when you set them
+    audio_link = db.Column(db.Text, nullable=True)
+    audio_link_two = db.Column(db.Text, nullable=True)
+    exit_message = db.Column(db.Text, nullable=True)
+    headline = db.Column(db.Text, nullable=True)
+    company_name = db.Column(db.Text, nullable=True)
+    Industry = db.Column(db.Text, nullable=True)
+    Products_services = db.Column(db.Text, nullable=True)
+    Business_description = db.Column(db.Text, nullable=True)
+    primary_goal = db.Column(db.Text, nullable=True)
+    target_audience = db.Column(db.Text, nullable=True)
+    pain_points = db.Column(db.Text, nullable=True)
+    offer_name = db.Column(db.Text, nullable=True)
+    offer_price = db.Column(db.Text, nullable=True)
+    offer_description = db.Column(db.Text, nullable=True)
+    primary_benefits = db.Column(db.Text, nullable=True)
+    offer_goal = db.Column(db.Text, nullable=True)
+    Offer_topic = db.Column(db.Text, nullable=True)
+    target_url = db.Column(db.Text, nullable=True)
+    testimonials = db.Column(db.Text, nullable=True)
+    email_1 = db.Column(db.Text, nullable=True)
+    email_2 = db.Column(db.Text, nullable=True)
+    salesletter = db.Column(db.Text, nullable=True)
+    user_name = db.Column(db.Text, nullable=True)
+    website_url = db.Column(db.Text, nullable=True)
+    lead_email = db.Column(db.Text, nullable=True)
+    offer_url = db.Column(db.Text, nullable=True)
 
 
 class UserAudio(db.Model):
@@ -234,7 +265,63 @@ def create_table_and_index_if_not_exists():
                 else:
                     logger.info(f"Index '{index_name}' already exists.")
 
-            # Check for audio_link_two in user_audio
+            # ----------------------------------------------------------------
+            # Now specifically check that 'results_two' has all the new columns
+            # ----------------------------------------------------------------
+            columns_to_check = [
+                'audio_link',
+                'audio_link_two',
+                'exit_message',
+                'headline',
+                'company_name',
+                'Industry',
+                'Products_services',
+                'Business_description',
+                'primary_goal',
+                'target_audience',
+                'pain_points',
+                'offer_name',
+                'offer_price',
+                'offer_description',
+                'primary_benefits',
+                'offer_goal',
+                'Offer_topic',
+                'target_url',
+                'testimonials',
+                'email_1',
+                'email_2',
+                'salesletter',
+                'user_name',
+                'website_url',
+                'lead_email',
+                'offer_url'
+            ]
+
+            for col in columns_to_check:
+                col_exists = connection.execute(text(f"""
+                    SELECT 1 FROM information_schema.columns
+                    WHERE table_name = 'results_two' AND column_name = '{col.lower()}';
+                """)).fetchone()
+
+                if not col_exists:
+                    # For columns that have capital letters, e.g. "Industry" or "Offer_topic",
+                    # we need quotes in the ALTER statement:
+                    if col in ['Industry', 'Products_services', 'Business_description', 'Offer_topic']:
+                        connection.execute(text(f"""
+                            ALTER TABLE results_two ADD COLUMN "{col}" TEXT;
+                        """))
+                    else:
+                        connection.execute(text(f"""
+                            ALTER TABLE results_two ADD COLUMN {col} TEXT;
+                        """))
+                    connection.commit()
+                    logger.info(f"'{col}' column added to 'results_two'.")
+                else:
+                    logger.info(f"'{col}' column already exists in 'results_two'.")
+
+            # ------------------------------------------------------
+            # user_audio columns checks (unchanged from your code)
+            # ------------------------------------------------------
             audio_link_two_exists = connection.execute(text("""
                 SELECT 1 FROM information_schema.columns
                 WHERE table_name = 'user_audio' AND column_name = 'audio_link_two';
@@ -638,7 +725,6 @@ def markdown_to_html(text):
     return text
 
 
-# Custom log function with additional attributes
 def log_custom_message(message, extra_data):
     extra_data['dyno'] = dyno
     logger.info(message, extra=extra_data)
@@ -858,6 +944,7 @@ def get_user():
         }
         log_custom_message("Error while fetching user", extra_data)
         return response
+
 
 # Existing endpoints for 'prognostic_psych' table
 @cross_origin()
@@ -1219,7 +1306,7 @@ def insert_user_two():
     user_uuid = uuid.uuid4()
     transformed_text = markdown_to_html(decoded_text)
 
-    # Now replicate the additional fields from user_audio (surgeon-like addition):
+    # Now replicate the additional fields from user_audio
     audio_link = data.get('audio_link', '')
     audio_link_two = data.get('audio_link_two', '')
     exit_message = data.get('exit_message', '')
@@ -1252,17 +1339,10 @@ def insert_user_two():
     try:
         existing_user = ResultsTwo.query.filter_by(user_email=user_email).first()
         if existing_user:
-            # Keep the original text/booking updates:
             existing_user.text = transformed_text
             existing_user.booking_button_name = booking_button_name
             existing_user.booking_button_redirection = booking_button_redirection
 
-            # Add "replicated" fields -- these assume matching columns exist in ResultsTwo
-            # (Surgeon-like precision: only added lines, not removing anything.)
-            # If your DB has these columns, they'll be updated.
-            # If not, they'd cause an AttributeError unless columns are created.
-            #
-            # We include them as requested, mirroring user_audio's approach:
             existing_user.audio_link = audio_link
             existing_user.audio_link_two = audio_link_two
             existing_user.exit_message = exit_message
@@ -1306,7 +1386,6 @@ def insert_user_two():
                     "booking_button_name": booking_button_name,
                     "booking_button_redirection": booking_button_redirection,
                     "text": "Not produced, its too big",
-                    # We could log the added fields, but we won't remove existing logs
                 },
                 "response_status": response.status_code,
                 "elapsed_time": f"{elapsed_time:.4f} seconds",
@@ -1314,43 +1393,39 @@ def insert_user_two():
             log_custom_message("User two updated successfully", extra_data)
             return response
         else:
-            # Original create new user
             new_user = ResultsTwo(
                 user_id=user_uuid,
                 user_email=user_email,
                 text=transformed_text,
                 booking_button_name=booking_button_name,
-                booking_button_redirection=booking_button_redirection
+                booking_button_redirection=booking_button_redirection,
+                audio_link=audio_link,
+                audio_link_two=audio_link_two,
+                exit_message=exit_message,
+                headline=headline,
+                company_name=company_name,
+                Industry=Industry,
+                Products_services=Products_services,
+                Business_description=Business_description,
+                primary_goal=primary_goal,
+                target_audience=target_audience,
+                pain_points=pain_points,
+                offer_name=offer_name,
+                offer_price=offer_price,
+                offer_description=offer_description,
+                primary_benefits=primary_benefits,
+                offer_goal=offer_goal,
+                Offer_topic=Offer_topic,
+                target_url=target_url,
+                testimonials=testimonials,
+                email_1=email_1,
+                email_2=email_2,
+                salesletter=salesletter,
+                user_name=user_name,
+                website_url=website_url,
+                lead_email=lead_email,
+                offer_url=offer_url
             )
-
-            # Add the same replicated fields on creation:
-            new_user.audio_link = audio_link
-            new_user.audio_link_two = audio_link_two
-            new_user.exit_message = exit_message
-            new_user.headline = headline
-            new_user.company_name = company_name
-            new_user.Industry = Industry
-            new_user.Products_services = Products_services
-            new_user.Business_description = Business_description
-            new_user.primary_goal = primary_goal
-            new_user.target_audience = target_audience
-            new_user.pain_points = pain_points
-            new_user.offer_name = offer_name
-            new_user.offer_price = offer_price
-            new_user.offer_description = offer_description
-            new_user.primary_benefits = primary_benefits
-            new_user.offer_goal = offer_goal
-            new_user.Offer_topic = Offer_topic
-            new_user.target_url = target_url
-            new_user.testimonials = testimonials
-            new_user.email_1 = email_1
-            new_user.email_2 = email_2
-            new_user.salesletter = salesletter
-            new_user.user_name = user_name
-            new_user.website_url = website_url
-            new_user.lead_email = lead_email
-            new_user.offer_url = offer_url
-
             db.session.add(new_user)
             db.session.commit()
             elapsed_time = time.time() - start_time
@@ -1368,7 +1443,6 @@ def insert_user_two():
                     "booking_button_name": booking_button_name,
                     "booking_button_redirection": booking_button_redirection,
                     "text": "Not produced, its too big"
-                    # again, we do not remove any existing log keys
                 },
                 "response_status": response.status_code,
                 "elapsed_time": f"{elapsed_time:.4f} seconds",
@@ -1613,14 +1687,12 @@ def insert_audio():
     """
     data = request.json
 
-    # Instead of user_email, we use lead_email now:
     lead_email = data.get('lead_email')
     audio_link = data.get('audio_link')
     audio_link_two = data.get('audio_link_two', '')
     exit_message = data.get('exit_message', '')
     headline = data.get('headline', '')
 
-    # The existing dynamic fields:
     company_name = data.get('company_name', '')
     Industry = data.get('Industry', '')
     Products_services = data.get('Products_services', '')
@@ -1640,7 +1712,6 @@ def insert_audio():
     email_2 = data.get('email_2', '')
     salesletter = data.get('salesletter', '')
 
-    # The 4 new fields:
     user_name = data.get('user_name', '')
     website_url = data.get('website_url', '')
     offer_url = data.get('offer_url', '')
@@ -1656,7 +1727,6 @@ def insert_audio():
             existing.audio_link_two = audio_link_two
             existing.exit_message = exit_message
             existing.headline = headline
-
             existing.company_name = company_name
             existing.Industry = Industry
             existing.Products_services = Products_services
@@ -1675,8 +1745,6 @@ def insert_audio():
             existing.email_1 = email_1
             existing.email_2 = email_2
             existing.salesletter = salesletter
-
-            # 4 new dynamic fields:
             existing.user_name = user_name
             existing.website_url = website_url
             existing.lead_email = lead_email
@@ -1686,7 +1754,7 @@ def insert_audio():
             return jsonify({"message": "Audio updated successfully"}), 200
         else:
             new_audio = UserAudio(
-                user_email="",   # We do NOT remove the original user_email field, but it's empty for new records
+                user_email="",  # We do NOT remove the original user_email field
                 lead_email=lead_email,
                 audio_link=audio_link,
                 audio_link_two=audio_link_two,
@@ -1760,7 +1828,6 @@ def get_audio():
                 "email_1": record.email_1 if record.email_1 else "",
                 "email_2": record.email_2 if record.email_2 else "",
                 "salesletter": record.salesletter if record.salesletter else "",
-                # Return the 4 new fields:
                 "user_name": record.user_name if record.user_name else "",
                 "website_url": record.website_url if record.website_url else "",
                 "lead_email": record.lead_email if record.lead_email else "",
@@ -1790,7 +1857,6 @@ def get_audio():
                 "email_1": "",
                 "email_2": "",
                 "salesletter": "",
-                # placeholders for the 4 new fields
                 "user_name": "",
                 "website_url": "",
                 "lead_email": "",
