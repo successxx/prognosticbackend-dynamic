@@ -189,8 +189,7 @@ def create_table_and_index_if_not_exists():
             logger.info("Table 'user_audio' already exists.")
 
         with db.engine.connect() as connection:
-            # You have columns checks here; omitted for brevity or left as-is
-            # ...
+            # If you have column/index checks, keep them the same. Omitted for brevity.
             pass
 
 
@@ -751,10 +750,9 @@ def insert_user_two():
     booking_button_name = data.get('booking_button_name')
     booking_button_redirection = data.get('booking_button_redirection')
 
-    # If user_email wasn't provided, we try to capture lead_email
+    # If user_email wasn't provided, fallback to lead_email
     if not user_email:
         user_email = data.get('lead_email', None)
-
     if not user_email:
         response = jsonify({'error': 'user_email is required'})
         response.status_code = 400
@@ -1143,10 +1141,10 @@ def insert_audio():
     """
     Example JSON body:
     {
-      "user_email": "someone@example.com",  <-- primary unique key
-      "lead_email": "optional@somewhere.com",
-      "audio_link": "...",  <-- required
-      ... plus any other fields
+      "user_email": "someone@example.com",  // or lead_email as fallback
+      "audio_link": "...",                  // now optional
+      "audio_link_two": "...",             // also optional
+      ...
     }
     """
     data = request.json
@@ -1159,13 +1157,12 @@ def insert_audio():
     if not user_email:
         return jsonify({"error": "Missing user_email or lead_email"}), 400
 
-    audio_link = data.get('audio_link')
-    if not audio_link:
-        return jsonify({"error": "Missing audio_link"}), 400
-
+    # audio_link no longer required; default to ""
+    audio_link = data.get('audio_link', '')
     audio_link_two = data.get('audio_link_two', '')
     exit_message = data.get('exit_message', '')
     headline = data.get('headline', '')
+
     company_name = data.get('company_name', '')
     Industry = data.get('Industry', '')
     Products_services = data.get('Products_services', '')
@@ -1192,10 +1189,12 @@ def insert_audio():
     try:
         existing = UserAudio.query.filter_by(user_email=user_email).first()
         if existing:
+            # Update existing record
             existing.audio_link = audio_link
             existing.audio_link_two = audio_link_two
             existing.exit_message = exit_message
             existing.headline = headline
+
             existing.company_name = company_name
             existing.Industry = Industry
             existing.Products_services = Products_services
@@ -1222,6 +1221,7 @@ def insert_audio():
             db.session.commit()
             return jsonify({"message": "Audio updated successfully"}), 200
         else:
+            # Create new record
             new_audio = UserAudio(
                 user_email=user_email,
                 audio_link=audio_link,
@@ -1264,7 +1264,7 @@ def insert_audio():
 def get_audio():
     """
     GET /get_audio?user_email=someone@example.com
-    We retrieve the record by user_email, exactly as it was originally set up.
+    We retrieve the record by user_email (or lead_email was used as fallback).
     """
     user_email = request.args.get('user_email')
     if not user_email:
