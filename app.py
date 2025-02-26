@@ -27,7 +27,7 @@ werkzeug_logger = logging.getLogger('werkzeug')
 werkzeug_logger.setLevel(logging.ERROR)  # Suppress INFO logs from Werkzeug
 
 app = Flask(__name__)
-cors = CORS(app)
+CORS(app, resources={r"/*": {"origins": "*"}})
 dyno = os.getenv('DYNO', 'unknown-dyno')
 
 database_url = os.environ.get('DATABASE_URL')
