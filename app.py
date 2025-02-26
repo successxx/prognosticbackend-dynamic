@@ -1060,13 +1060,42 @@ def get_user_two():
         user = ResultsTwo.query.filter_by(user_email=user_email).first()
 
         if user:
+            # HERE WE ADD THE EXTRA FIELDS
             response_data = {
                 "success": True,
                 "text": user.text,
                 "user_email": user.user_email,
                 "booking_button_name": user.booking_button_name,
                 "booking_button_redirection": user.booking_button_redirection,
-                "length": len(user.text)
+                "length": len(user.text),
+
+                # Add every column from ResultsTwo:
+                "audio_link": user.audio_link,
+                "audio_link_two": user.audio_link_two,
+                "exit_message": user.exit_message,
+                "headline": user.headline,
+                "company_name": user.company_name,
+                "Industry": user.Industry,
+                "Products_services": user.Products_services,
+                "Business_description": user.Business_description,
+                "primary_goal": user.primary_goal,
+                "target_audience": user.target_audience,
+                "pain_points": user.pain_points,
+                "offer_name": user.offer_name,
+                "offer_price": user.offer_price,
+                "offer_description": user.offer_description,
+                "primary_benefits": user.primary_benefits,
+                "offer_goal": user.offer_goal,
+                "Offer_topic": user.Offer_topic,
+                "target_url": user.target_url,
+                "testimonials": user.testimonials,
+                "email_1": user.email_1,
+                "email_2": user.email_2,
+                "salesletter": user.salesletter,
+                "user_name": user.user_name,
+                "website_url": user.website_url,
+                "lead_email": user.lead_email,
+                "offer_url": user.offer_url
             }
             elapsed_time = time.time() - start_time
             response = jsonify(response_data)
