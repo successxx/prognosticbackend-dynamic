@@ -1364,5 +1364,107 @@ def get_audio():
         return jsonify({"error": str(e)}), 500
 
 
+# ----------------------------------------------------------
+# NEW ENDPOINT: /update_lead
+# ----------------------------------------------------------
+@cross_origin()
+@app.route('/update_lead', methods=['POST'])
+def update_lead():
+    """
+    Overwrite (update) an existing lead in the Prognostic table by user_email.
+    If no record is found, returns a 404 indicating no such lead exists.
+    """
+    start_time = time.time()
+    data = request.json
+    user_email = data.get('user_email')
+    text_content = data.get('text')
+    booking_button_name = data.get('booking_button_name')
+    booking_button_redirection = data.get('booking_button_redirection')
+
+    if not user_email:
+        response = jsonify({'error': 'user_email is required'})
+        response.status_code = 400
+        extra_data = {
+            "event_time": time.time(),
+            "method": request.method,
+            "url": request.url,
+            "remote_addr": request.remote_addr,
+            "headers": dict(request.headers),
+            "response_status": response.status_code,
+            "elapsed_time": f"{time.time() - start_time:.4f} seconds",
+        }
+        log_custom_message("Update lead failed - no user_email", extra_data)
+        return response
+
+    decoded_text = urllib.parse.unquote(text_content) if text_content else ''
+    transformed_text = markdown_to_html(decoded_text)
+
+    try:
+        existing_user = Prognostic.query.filter_by(user_email=user_email).first()
+        if existing_user:
+            existing_user.text = transformed_text
+            existing_user.booking_button_name = booking_button_name
+            existing_user.booking_button_redirection = booking_button_redirection
+            db.session.commit()
+
+            elapsed_time = time.time() - start_time
+            response = jsonify({'message': 'Lead updated successfully!', 'user_id': str(existing_user.user_id)})
+            response.status_code = 200
+
+            extra_data = {
+                "event_time": time.time(),
+                "method": request.method,
+                "url": request.url,
+                "remote_addr": request.remote_addr,
+                "headers": dict(request.headers),
+                "request_body": {
+                    "user_email": user_email,
+                    "booking_button_name": booking_button_name,
+                    "booking_button_redirection": booking_button_redirection,
+                    "text": "Not produced, its too big"
+                },
+                "response_status": response.status_code,
+                "elapsed_time": f"{elapsed_time:.4f} seconds",
+            }
+            log_custom_message("Lead updated successfully", extra_data)
+            return response
+        else:
+            elapsed_time = time.time() - start_time
+            response = jsonify({'error': 'No existing lead found with that email'})
+            response.status_code = 404
+
+            extra_data = {
+                "event_time": time.time(),
+                "method": request.method,
+                "url": request.url,
+                "remote_addr": request.remote_addr,
+                "headers": dict(request.headers),
+                "request_body": data,
+                "response_status": response.status_code,
+                "elapsed_time": f"{elapsed_time:.4f} seconds",
+            }
+            log_custom_message("No lead found to update", extra_data)
+            return response
+
+    except Exception as e:
+        db.session.rollback()
+        response = jsonify({'error': str(e)})
+        response.status_code = 400
+
+        extra_data = {
+            "event_time": time.time(),
+            "method": request.method,
+            "url": request.url,
+            "remote_addr": request.remote_addr,
+            "headers": dict(request.headers),
+            "request_body": data,
+            "response_status": response.status_code,
+            "error": str(e),
+            "elapsed_time": f"{time.time() - start_time:.4f} seconds",
+        }
+        log_custom_message("Error while updating lead", extra_data)
+        return response
+
+
 if __name__ == '__main__':
     app.run(host='127.0.0.1', port=5001)
