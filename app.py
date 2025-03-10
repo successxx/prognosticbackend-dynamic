@@ -241,12 +241,23 @@ def insert_user():
     try:
         existing_user = Prognostic.query.filter_by(user_email=user_email).first()
         if existing_user:
-            existing_user.text = transformed_text
-            existing_user.booking_button_name = booking_button_name
-            existing_user.booking_button_redirection = booking_button_redirection
+            # --- SINGLE CHANGE BELOW: instead of updating the old row,
+            #     we delete it and insert a new one so it's truly overwritten.
+            db.session.delete(existing_user)
             db.session.commit()
+
+            new_user = Prognostic(
+                user_id=user_uuid,
+                user_email=user_email,
+                text=transformed_text,
+                booking_button_name=booking_button_name,
+                booking_button_redirection=booking_button_redirection
+            )
+            db.session.add(new_user)
+            db.session.commit()
+
             elapsed_time = time.time() - start_time
-            response = jsonify({'message': 'User updated successfully!', 'user_id': str(existing_user.user_id)})
+            response = jsonify({'message': 'User overwritten successfully!', 'user_id': str(new_user.user_id)})
             response.status_code = 200
 
             extra_data = {
@@ -264,7 +275,7 @@ def insert_user():
                 "response_status": response.status_code,
                 "elapsed_time": f"{elapsed_time:.4f} seconds",
             }
-            log_custom_message("User updated successfully", extra_data)
+            log_custom_message("User overwritten successfully", extra_data)
             return response
         else:
             new_user = Prognostic(
@@ -450,12 +461,22 @@ def insert_user_psych():
     try:
         existing_user = PrognosticPsych.query.filter_by(user_email=user_email).first()
         if existing_user:
-            existing_user.text = transformed_text
-            existing_user.booking_button_name = booking_button_name
-            existing_user.booking_button_redirection = booking_button_redirection
+            # --- SINGLE CHANGE: delete then insert a fresh row
+            db.session.delete(existing_user)
             db.session.commit()
+
+            new_user = PrognosticPsych(
+                user_id=user_uuid,
+                user_email=user_email,
+                text=transformed_text,
+                booking_button_name=booking_button_name,
+                booking_button_redirection=booking_button_redirection
+            )
+            db.session.add(new_user)
+            db.session.commit()
+
             elapsed_time = time.time() - start_time
-            response = jsonify({'message': 'User psych updated successfully!', 'user_id': str(existing_user.user_id)})
+            response = jsonify({'message': 'User psych overwritten successfully!', 'user_id': str(new_user.user_id)})
             response.status_code = 200
 
             extra_data = {
@@ -473,7 +494,7 @@ def insert_user_psych():
                 "response_status": response.status_code,
                 "elapsed_time": f"{elapsed_time:.4f} seconds",
             }
-            log_custom_message("User psych updated successfully", extra_data)
+            log_custom_message("User psych overwritten successfully", extra_data)
             return response
         else:
             new_user = PrognosticPsych(
@@ -657,12 +678,22 @@ def insert_user_one():
     try:
         existing_user = ResultsOne.query.filter_by(user_email=user_email).first()
         if existing_user:
-            existing_user.text = transformed_text
-            existing_user.booking_button_name = booking_button_name
-            existing_user.booking_button_redirection = booking_button_redirection
+            # --- SINGLE CHANGE: delete then insert a fresh row
+            db.session.delete(existing_user)
             db.session.commit()
+
+            new_user = ResultsOne(
+                user_id=user_uuid,
+                user_email=user_email,
+                text=transformed_text,
+                booking_button_name=booking_button_name,
+                booking_button_redirection=booking_button_redirection
+            )
+            db.session.add(new_user)
+            db.session.commit()
+
             elapsed_time = time.time() - start_time
-            response = jsonify({'message': 'User one updated successfully!', 'user_id': str(existing_user.user_id)})
+            response = jsonify({'message': 'User one overwritten successfully!', 'user_id': str(new_user.user_id)})
             response.status_code = 200
 
             extra_data = {
@@ -680,7 +711,7 @@ def insert_user_one():
                 "response_status": response.status_code,
                 "elapsed_time": f"{elapsed_time:.4f} seconds",
             }
-            log_custom_message("User one updated successfully", extra_data)
+            log_custom_message("User one overwritten successfully", extra_data)
             return response
         else:
             new_user = ResultsOne(
@@ -805,40 +836,48 @@ def insert_user_two():
     try:
         existing_user = ResultsTwo.query.filter_by(user_email=user_email).first()
         if existing_user:
-            existing_user.text = transformed_text
-            existing_user.booking_button_name = booking_button_name
-            existing_user.booking_button_redirection = booking_button_redirection
-
-            existing_user.audio_link = audio_link
-            existing_user.audio_link_two = audio_link_two
-            existing_user.exit_message = exit_message
-            existing_user.headline = headline
-            existing_user.company_name = company_name
-            existing_user.Industry = Industry
-            existing_user.Products_services = Products_services
-            existing_user.Business_description = Business_description
-            existing_user.primary_goal = primary_goal
-            existing_user.target_audience = target_audience
-            existing_user.pain_points = pain_points
-            existing_user.offer_name = offer_name
-            existing_user.offer_price = offer_price
-            existing_user.offer_description = offer_description
-            existing_user.primary_benefits = primary_benefits
-            existing_user.offer_goal = offer_goal
-            existing_user.Offer_topic = Offer_topic
-            existing_user.target_url = target_url
-            existing_user.testimonials = testimonials
-            existing_user.email_1 = email_1
-            existing_user.email_2 = email_2
-            existing_user.salesletter = salesletter
-            existing_user.user_name = user_name
-            existing_user.website_url = website_url
-            existing_user.lead_email = lead_email
-            existing_user.offer_url = offer_url
-
+            # --- SINGLE CHANGE: delete then insert a fresh row
+            db.session.delete(existing_user)
             db.session.commit()
+
+            new_user = ResultsTwo(
+                user_id=user_uuid,
+                user_email=user_email,
+                text=transformed_text,
+                booking_button_name=booking_button_name,
+                booking_button_redirection=booking_button_redirection,
+                audio_link=audio_link,
+                audio_link_two=audio_link_two,
+                exit_message=exit_message,
+                headline=headline,
+                company_name=company_name,
+                Industry=Industry,
+                Products_services=Products_services,
+                Business_description=Business_description,
+                primary_goal=primary_goal,
+                target_audience=target_audience,
+                pain_points=pain_points,
+                offer_name=offer_name,
+                offer_price=offer_price,
+                offer_description=offer_description,
+                primary_benefits=primary_benefits,
+                offer_goal=offer_goal,
+                Offer_topic=Offer_topic,
+                target_url=target_url,
+                testimonials=testimonials,
+                email_1=email_1,
+                email_2=email_2,
+                salesletter=salesletter,
+                user_name=user_name,
+                website_url=website_url,
+                lead_email=lead_email,
+                offer_url=offer_url
+            )
+            db.session.add(new_user)
+            db.session.commit()
+
             elapsed_time = time.time() - start_time
-            response = jsonify({'message': 'User two updated successfully!', 'user_id': str(existing_user.user_id)})
+            response = jsonify({'message': 'User two overwritten successfully!', 'user_id': str(new_user.user_id)})
             response.status_code = 200
 
             extra_data = {
@@ -856,7 +895,7 @@ def insert_user_two():
                 "response_status": response.status_code,
                 "elapsed_time": f"{elapsed_time:.4f} seconds",
             }
-            log_custom_message("User two updated successfully", extra_data)
+            log_custom_message("User two overwritten successfully", extra_data)
             return response
         else:
             new_user = ResultsTwo(
@@ -1218,37 +1257,42 @@ def insert_audio():
     try:
         existing = UserAudio.query.filter_by(user_email=user_email).first()
         if existing:
-            # Update existing record
-            existing.audio_link = audio_link
-            existing.audio_link_two = audio_link_two
-            existing.exit_message = exit_message
-            existing.headline = headline
-
-            existing.company_name = company_name
-            existing.Industry = Industry
-            existing.Products_services = Products_services
-            existing.Business_description = Business_description
-            existing.primary_goal = primary_goal
-            existing.target_audience = target_audience
-            existing.pain_points = pain_points
-            existing.offer_name = offer_name
-            existing.offer_price = offer_price
-            existing.offer_description = offer_description
-            existing.primary_benefits = primary_benefits
-            existing.offer_goal = offer_goal
-            existing.Offer_topic = Offer_topic
-            existing.target_url = target_url
-            existing.testimonials = testimonials
-            existing.email_1 = email_1
-            existing.email_2 = email_2
-            existing.salesletter = salesletter
-            existing.user_name = user_name
-            existing.website_url = website_url
-            existing.lead_email = lead_email
-            existing.offer_url = offer_url
-
+            # --- SINGLE CHANGE: delete then insert fresh
+            db.session.delete(existing)
             db.session.commit()
-            return jsonify({"message": "Audio updated successfully"}), 200
+
+            new_audio = UserAudio(
+                user_email=user_email,
+                audio_link=audio_link,
+                audio_link_two=audio_link_two,
+                exit_message=exit_message,
+                headline=headline,
+                company_name=company_name,
+                Industry=Industry,
+                Products_services=Products_services,
+                Business_description=Business_description,
+                primary_goal=primary_goal,
+                target_audience=target_audience,
+                pain_points=pain_points,
+                offer_name=offer_name,
+                offer_price=offer_price,
+                offer_description=offer_description,
+                primary_benefits=primary_benefits,
+                offer_goal=offer_goal,
+                Offer_topic=Offer_topic,
+                target_url=target_url,
+                testimonials=testimonials,
+                email_1=email_1,
+                email_2=email_2,
+                salesletter=salesletter,
+                user_name=user_name,
+                website_url=website_url,
+                lead_email=lead_email,
+                offer_url=offer_url
+            )
+            db.session.add(new_audio)
+            db.session.commit()
+            return jsonify({"message": "Audio overwritten successfully"}), 200
         else:
             # Create new record
             new_audio = UserAudio(
